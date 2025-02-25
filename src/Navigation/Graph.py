@@ -1,11 +1,10 @@
 import sys
-import json
-from pathlib import Path
 from Navigation.Waypoint import Waypoint
 from Navigation.WaypointStatus import WaypointStatus
 from Navigation.EdgeStatus import EdgeStatus
 from Navigation.Angle import Angle
 from Navigation.Edge import Edge
+from Configuration.Configurator import Configurator
 
 class Graph:
     def __init__(self):
@@ -30,11 +29,8 @@ class Graph:
         self.current_waypoint = x
         self.current_waypoint.set_dijkstra_visited(True)
         self.current_waypoint.set_status(WaypointStatus.FREE)
-
-        with open(Path(__file__).parent / 'angles.json', 'r') as file:
-            data = json.load(file)
         
-        for waypoint_id, angle_values in data.items():
+        for waypoint_id, angle_values in Configurator().get_angles().items():
             waypoint = self.get_waypoint_by_id(waypoint_id)
             angles = []
             for outgoing_waypoint_id, angle in angle_values.items():
