@@ -24,5 +24,5 @@ class Configurator:
         return cls._instance
 
     def get_angles(self):
-        return self.configuration.angles
+        return self.configuration["angles"]
 
