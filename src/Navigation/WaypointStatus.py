@@ -1,0 +1,8 @@
+from enum import Enum
+
+class WaypointStatus(str, Enum):
+    UNKNOWN = "UNKNOWN"
+    BLOCKED = "BLOCKED"
+    FREE = "FREE"
+    POTENTIALLY_BLOCKED = "POTENTIALLY_BLOCKED"
+    POTENTIALLY_FREE = "POTENTIALLY_FREE"
