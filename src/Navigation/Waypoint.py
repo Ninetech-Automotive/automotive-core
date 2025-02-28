@@ -12,7 +12,8 @@ class Waypoint:
         self.incoming_angle: float = 0.0
         self.weight_to_target: int = sys.maxsize
         self.dijkstra_visied = False
-        self.previous_node_to_current_waypoint = None
+        # The previous node to this waypoint in the shortest path from the current waypoint to the target waypoint.
+        self.previous_node_to_this_waypoint = None
 
     def get_id(self):
         return self.id
@@ -26,11 +27,11 @@ class Waypoint:
     def set_status(self, status):
         self.status = status
 
-    def set_previous_node_to_current_waypoint(self, waypoint):
-        self.previous_node_to_current_waypoint = waypoint
+    def set_previous_node_to_this_waypoint(self, waypoint):
+        self.previous_node_to_this_waypoint = waypoint
 
-    def get_previous_node_to_current_waypoint(self):
-        return self.previous_node_to_current_waypoint
+    def get_previous_node_to_this_waypoint(self):
+        return self.previous_node_to_this_waypoint
 
     def set_incoming_angle_by_id(self, waypoint_id):
         angle = [a for a in self.angles if a.get_waypoint().get_id() == waypoint_id][0]
@@ -79,6 +80,7 @@ class Waypoint:
 
     def get_angle_from_value(self, value: float):
         calculated_angle = self.calculate_angle_from_value(value)
+        # returns the angle with the predefined value that is closest to the calculated angle
         return min(self.angles, key=lambda a: self.modulo_360_difference(a.get_value(),calculated_angle))
     
     def modulo_360_difference(self, a, b):
@@ -91,4 +93,4 @@ class Waypoint:
         return (self.incoming_angle - 180.0 + value) % 360
     
     def __str__(self):
-        return f"Waypoint[Status:{self.status};ID:{self.id};Angles:{self.angles};Incoming_Angle:{self.incoming_angle};Weight_To_Target:{self.weight_to_target};Dijkstra_Visited:{self.dijkstra_visied};Previous_Node_To_Current_Waypoint:{self.previous_node_to_current_waypoint}]"
+        return f"Waypoint[Status:{self.status};ID:{self.id};Angles:{self.angles};Incoming_Angle:{self.incoming_angle};Weight_To_Target:{self.weight_to_target};Dijkstra_Visited:{self.dijkstra_visied};previous_node_to_this_waypoint:{self.previous_node_to_this_waypoint}]"

@@ -7,6 +7,10 @@ from Navigation.Edge import Edge
 from Configuration.Configurator import Configurator
 
 class Graph:
+    """
+    Logical representation of the waypoint network. This graph is updated regularly based on the information provided by the sensors.
+    On each waypoint, the fastet path to the target waypoint is calculated using Dijkstra's algorithm.
+    """
     def __init__(self):
         self.current_waypoint: Waypoint = None
         self.target_waypoint: Waypoint = None
@@ -16,6 +20,7 @@ class Graph:
         self.shortest_path_to_target = []
 
     def initialize_waypoints(self):
+        # waypoint X is the starting position which is not a physical waypoint
         x = Waypoint("X")
         s = Waypoint("S")
         h = Waypoint("H")
@@ -62,7 +67,7 @@ class Graph:
         node = self.target_waypoint
         while (node.get_id() != self.current_waypoint.get_id()):
             self.shortest_path_to_target.insert(0, node)
-            node = node.get_previous_node_to_current_waypoint()
+            node = node.get_previous_node_to_this_waypoint()
         print('[pi    ] shortest path: ', list(map(lambda n: n.get_id(), self.shortest_path_to_target)))
  
     def go_back_to_previous_waypoint(self):
@@ -77,13 +82,16 @@ class Graph:
     def update_waypoint_status(self, waypoint_status):
         self.current_waypoint.set_status(waypoint_status)
 
-    def update_edge_status(self):
+    def update_previous_edge_status(self):
         self.current_waypoint.update_edge_to_waypoint(self.previous_waypoint.get_id())
 
     def update_waypoint_from_angle(self, angle_value, waypoint_status, edge_status):
         return self.current_waypoint.update_angle(angle_value, waypoint_status, edge_status)
 
     def remove_missing_angles(self):
+        """
+        After point scanning, when an edge still has the status UNKNOWN, then this edge does not exist and is removed.
+        """
         for angle in self.current_waypoint.get_angles():
             if angle.get_edge().get_status() == EdgeStatus.UNKNOWN:
                 angle.get_waypoint().remove_angle_to_waypoint(self.current_waypoint.get_id())
@@ -96,21 +104,22 @@ class Graph:
         while(self.has_next_unvisited_node()):
             current_node = self.get_next_unvisited_node()
             for angle in current_node.get_unblocked_angles():
-                waypoint = angle.get_waypoint()
-                edge = angle.get_edge()
-                weight_to_target = current_node.get_weight_to_target() + edge.get_weight()
-                if (weight_to_target < waypoint.get_weight_to_target() and not waypoint.get_dijkstra_visited()):
-                    waypoint.set_weight_to_target(weight_to_target)
-                    waypoint.set_previous_node_to_current_waypoint(current_node)
+                outgoing_node = angle.get_waypoint()
+                outgoing_edge = angle.get_edge()
+                calculated_weight_to_target_on_outgoing_node = current_node.get_weight_to_target() + outgoing_edge.get_weight()
+                current_weight_to_target_on_outgoing_node = outgoing_node.get_weight_to_target()
+                if (calculated_weight_to_target_on_outgoing_node < current_weight_to_target_on_outgoing_node and not outgoing_node.get_dijkstra_visited()):
+                    outgoing_node.set_weight_to_target(calculated_weight_to_target_on_outgoing_node)
+                    outgoing_node.set_previous_node_to_this_waypoint(current_node)
             current_node.set_dijkstra_visited(True)
 
     def reset_dijkstra(self):
         self.shortest_path_to_target.clear()
         for waypoint in self.waypoints:
             waypoint.set_dijkstra_visited(False)
-            waypoint.set_previous_node_to_current_waypoint(None)
+            waypoint.set_previous_node_to_this_waypoint(None)
             waypoint.set_weight_to_target(sys.maxsize)
-            waypoint.set_previous_node_to_current_waypoint(None)
+            waypoint.set_previous_node_to_this_waypoint(None)
 
     def get_next_unvisited_node(self):
         unvisited_nodes = self.get_unvisited_nodes()

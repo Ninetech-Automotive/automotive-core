@@ -1,7 +1,10 @@
 import json
 
-# singleton
 class Configurator:
+    """
+    Singleton class which manages static configurations.
+    """
+
     _instance = None
     _configuration_path = None
 
@@ -24,5 +27,20 @@ class Configurator:
         return cls._instance
 
     def get_angles(self):
+        """
+        Returns the angle float values as a dict in the following format:
+        {
+            "X": {
+                "S": 0.0
+            },
+            "S": {
+                "G": 30.0,
+                "F": 60.0,
+                "X": 180.0,
+                "H": 300.0
+            }
+        }
+        Each key represents a waypoint and contains the angle values towards the outgoing waypoints.
+        """
         return self.configuration["angles"]
 

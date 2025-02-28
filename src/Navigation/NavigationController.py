@@ -8,7 +8,8 @@ class NavigationController():
         self.graph = Graph()
         self.emitter = emitter
         self.object_detector = object_detector
-        self.angle_ids = []
+        # keeps track of the outgoing waypoints and their indexes for the current waypoint
+        self.outgoing_waypoint_ids = []
 
     def startup_procedure(self):
         # TODO
@@ -16,14 +17,15 @@ class NavigationController():
 
     def start(self, target_waypoint: str):
         self.graph.set_target_waypoint(target_waypoint)
-        self.angle_ids.append("S")
+        self.outgoing_waypoint_ids.append("S")
         print("[pi    ] target set to ", target_waypoint)
         self.emitter.emit("ping")
+        # controller should now receive a 'pong' message and continue with the on_pong method
 
     def next(self):
         next_best_waypoint_id = self.graph.go_to_next_best_waypoint()
-        next_best_waypoint_index = self.angle_ids.index(next_best_waypoint_id)
-        self.angle_ids.clear()
+        next_best_waypoint_index = self.outgoing_waypoint_ids.index(next_best_waypoint_id)
+        self.outgoing_waypoint_ids.clear()
         self.emitter.emit(f"target_line:{next_best_waypoint_index}")
 
     def on_pong(self):
@@ -32,7 +34,7 @@ class NavigationController():
     
     def on_waypoint(self):
         self.graph.update_waypoint_status(WaypointStatus.FREE)
-        self.graph.update_edge_status()
+        self.graph.update_previous_edge_status()
         if (not self.graph.has_reached_target_waypoint()):
             self.emitter.emit("scan_point")
         else:
@@ -42,7 +44,7 @@ class NavigationController():
         waypoint_status, edge_status = self.object_detector.detect()
         print(f"[pi    ] waypoint_status: {waypoint_status}, edge_status: {edge_status.name}")
         angle = self.graph.update_waypoint_from_angle(angle_value, waypoint_status, edge_status)
-        self.angle_ids.append(angle.get_waypoint().get_id())
+        self.outgoing_waypoint_ids.append(angle.get_waypoint().get_id())
         
     def on_point_scanning_finished(self):
         self.graph.remove_missing_angles()
