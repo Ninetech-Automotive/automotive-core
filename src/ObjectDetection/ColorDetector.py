@@ -7,7 +7,7 @@ class ColorDetector(ObjectDetector):
     def __init__(self, camera):
         self.camera = camera
  
-    def is_target_color(self, r, g, b, target_color, tolerance):
+    def __is_target_color(self, r, g, b, target_color, tolerance):
         target_r, target_g, target_b = target_color
         # Check if the pixel is within the color tolerance
         return (
@@ -46,9 +46,9 @@ class ColorDetector(ObjectDetector):
                 green = image[x][y][1]
                 blue = image[x][y][2]
 
-                if self.is_target_color(red, green, blue, cone_color, color_tolerance):
+                if self.__is_target_color(red, green, blue, cone_color, color_tolerance):
                     matching_cone_pixel_count += 1
-                if self.is_target_color(
+                if self.__is_target_color(
                     red, green, blue, obstacle_color, color_tolerance
                 ):
                     matching_obstacle_pixel_count += 1

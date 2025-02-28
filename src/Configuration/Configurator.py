@@ -1,4 +1,5 @@
 import json
+from Validation.Validator import Validator
 
 class Configurator:
     """
@@ -17,6 +18,7 @@ class Configurator:
         if not hasattr(self, 'initialized'):
             with open(self._configuration_path, 'r') as file:
                 self.configuration = json.load(file)
+            Validator.validate_configuration(self.configuration)
             self.initialized = True
 
     @classmethod
