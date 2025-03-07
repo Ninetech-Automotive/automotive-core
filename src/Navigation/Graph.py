@@ -91,6 +91,7 @@ class Graph:
 
     def update_previous_edge_status(self):
         self.current_waypoint.update_edge_to_waypoint(self.previous_waypoint.get_id())
+        self.previous_waypoint.update_edge_to_waypoint(self.current_waypoint.get_id())
 
     def update_waypoint_from_angle(self, angle_value: float, waypoint_status: WaypointStatus, edge_status: EdgeStatus):
         Validator.validate_angle_value(angle_value)
@@ -145,8 +146,10 @@ class Graph:
         self.current_waypoint.status = WaypointStatus.BLOCKED
 
     def obstacle_detected(self):
-        edge = self.previous_waypoint.get_edge_to_waypoint(self.current_waypoint.get_id())
-        edge.set_status(EdgeStatus.OBSTRUCTED)
+        edge_from_previous = self.previous_waypoint.get_edge_to_waypoint(self.current_waypoint.get_id())
+        edge_from_previous.set_status(EdgeStatus.OBSTRUCTED)
+        edge_to_previous = self.current_waypoint.get_edge_to_waypoint(self.previous_waypoint.get_id())
+        edge_to_previous.set_status(EdgeStatus.OBSTRUCTED)
 
     def __str__(self):
         return f"""
