@@ -18,5 +18,5 @@ class Camera(ABC):
         pass
 
     @abstractmethod
-    def get_image_array(self) -> list[list[list[3]]]:
+    def get_image_array(self):
         pass
