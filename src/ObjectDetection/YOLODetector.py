@@ -7,12 +7,12 @@ from ObjectDetection.ObjectDetector import ObjectDetector
 
 
 class YOLODetector(ObjectDetector):
-    def __init__(self, camera, x_min_percent=0.25):
+    def __init__(self, camera, center_stripe_percentage=0.5):
         self.camera = camera
         path_to_model = Path(__file__).resolve().parent / "best.pt"
         self.model = YOLO(path_to_model)
-        # the percentage of the image width that the object's x_min should be greater than
-        self.x_min_percent = x_min_percent
+        # percentage of the image width that is considered the center stripe and is checked for obstacles
+        self.center_stripe_percentage = center_stripe_percentage
 
     def detect(self):
         frame = self.camera.get_image_array()
@@ -26,10 +26,14 @@ class YOLODetector(ObjectDetector):
         return waypoint_status, edge_status
 
     def __check_for_label_in_center_stripe(self, objects, label):
+        center_stripe_width = self.camera.get_width() * self.center_stripe_percentage
+        center = self.camera.get_width() / 2
+        center_stripe_left_bound = center - center_stripe_width / 2
+        center_stripe_right_bound = center + center_stripe_width / 2
         for obj in objects:
             if obj["label"] == label:
-                x_min = obj["bounding_box"]["x_min"]
-                if x_min > self.camera.get_width() * self.x_min_percent:
+                center = obj["bounding_box"]["x_min"] + obj["bounding_box"]["width"] / 2
+                if center_stripe_left_bound < center < center_stripe_right_bound:
                     return True
         return False
 
