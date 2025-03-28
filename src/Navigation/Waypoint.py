@@ -54,12 +54,15 @@ class Waypoint:
     def get_angles(self):
         return self.angles
 
-    def get_unblocked_angles(self):
-        return [a for a in self.angles if a.get_waypoint().get_status() not in [WaypointStatus.BLOCKED, WaypointStatus.POTENTIALLY_BLOCKED]]
+    def get_possible_angles(self):
+        unblocked_angles = [a for a in self.angles if a.get_waypoint().get_status() not in [WaypointStatus.BLOCKED, WaypointStatus.POTENTIALLY_BLOCKED]]
+        return [a for a in unblocked_angles if a.get_edge().get_status() not in [EdgeStatus.MISSING, EdgeStatus.POTENTIALLY_MISSING]]
     
-    def remove_angle_to_waypoint(self, waypoint_id: str):
+    def set_angle_to_waypoint_as_missing(self, waypoint_id: str):
         Validator.validate_waypoint_id_format(waypoint_id)
-        self.angles = [a for a in self.angles if a.get_waypoint().get_id() != waypoint_id]
+        angle = self.__get_angle_to_waypoint(waypoint_id)
+        angle.get_edge().set_status(EdgeStatus.MISSING)
+        
     
     def __get_angle_to_waypoint(self, waypoint_id: str):
         return [a for a in self.angles if a.get_waypoint().get_id() == waypoint_id][0]

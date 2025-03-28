@@ -20,9 +20,9 @@ class TestWaypoint:
         waypoint.set_incoming_angle_by_id("B")
         assert waypoint.incoming_angle == 60.0
 
-    def test_remove_angle_to_waypoint(self, waypoint):
-        waypoint.remove_angle_to_waypoint("B")
-        assert len(waypoint.angles) == 0
+    def test_set_angle_to_waypoint_as_missing(self, waypoint):
+        waypoint.set_angle_to_waypoint_as_missing("B")
+        assert waypoint.get_edge_to_waypoint("B").get_status() == EdgeStatus.MISSING
 
     def test_get_edge_to_waypoint(self, waypoint):
         edge = waypoint.get_edge_to_waypoint("B")

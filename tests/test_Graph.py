@@ -5,6 +5,7 @@ from Navigation.Waypoint import Waypoint
 from Navigation.WaypointStatus import WaypointStatus
 from Navigation.EdgeStatus import EdgeStatus
 from Configuration.Configurator import Configurator
+from Exceptions.NoPathLeftError import NoPathLeftError
 import json
 
 
@@ -114,10 +115,10 @@ class TestGraph:
         assert angle.get_edge().get_status() == EdgeStatus.FREE
         assert angle.get_waypoint().get_status() == WaypointStatus.FREE
 
-    def test_remove_missing_angles(self, graph):
+    def test_update_missing_angles(self, graph):
         graph.current_waypoint.get_angles()[0].get_edge().set_status(EdgeStatus.UNKNOWN)
-        graph.remove_missing_angles()
-        assert len(graph.current_waypoint.get_angles()) == 0
+        graph.update_missing_angles()
+        assert graph.current_waypoint.get_angles()[0].get_edge().get_status() == EdgeStatus.MISSING
 
     def test_cone_detected(self, graph):
         graph.cone_detected()
@@ -139,3 +140,71 @@ class TestGraph:
             ).get_status()
             == EdgeStatus.OBSTRUCTED
         )
+
+    def test_reset_object_detection_data_waypoints(self, graph):
+        graph.set_target_waypoint("A")
+        graph._get_waypoint_by_id("H").set_status(WaypointStatus.POTENTIALLY_BLOCKED)
+        graph._get_waypoint_by_id("G").set_status(WaypointStatus.POTENTIALLY_BLOCKED)
+        graph._get_waypoint_by_id("F").set_status(WaypointStatus.POTENTIALLY_BLOCKED)
+
+        graph.go_to_next_best_waypoint()
+        assert graph._get_waypoint_by_id("H").get_status() == WaypointStatus.UNKNOWN
+        assert graph._get_waypoint_by_id("G").get_status() == WaypointStatus.UNKNOWN
+        assert graph._get_waypoint_by_id("F").get_status() == WaypointStatus.UNKNOWN
+
+    def test_no_paths_left_waypoints(self, graph):
+        graph.set_target_waypoint("A")
+        graph.go_to_next_best_waypoint()
+        graph._get_waypoint_by_id("H").set_status(WaypointStatus.BLOCKED)
+        graph._get_waypoint_by_id("G").set_status(WaypointStatus.BLOCKED)
+        graph._get_waypoint_by_id("F").set_status(WaypointStatus.BLOCKED)
+        with pytest.raises(NoPathLeftError):
+            graph.go_to_next_best_waypoint()
+
+    def test_reset_object_detection_data_edges(self, graph):
+        graph.set_target_waypoint("A")
+        edge1 = graph._get_waypoint_by_id("S").get_edge_to_waypoint("H")
+        edge2 = graph._get_waypoint_by_id("S").get_edge_to_waypoint("G")
+        edge3 = graph._get_waypoint_by_id("S").get_edge_to_waypoint("F")
+        edge1.set_status(EdgeStatus.POTENTIALLY_MISSING)
+        edge2.set_status(EdgeStatus.POTENTIALLY_MISSING)
+        edge3.set_status(EdgeStatus.POTENTIALLY_MISSING)
+        graph.go_to_next_best_waypoint()
+        assert edge1.get_status() == EdgeStatus.UNKNOWN
+        assert edge2.get_status() == EdgeStatus.UNKNOWN
+        assert edge3.get_status() == EdgeStatus.UNKNOWN
+
+    def test_no_paths_left_edges(self, graph):
+        graph.set_target_waypoint("A")
+        edge1 = graph._get_waypoint_by_id("S").get_edge_to_waypoint("H")
+        edge2 = graph._get_waypoint_by_id("S").get_edge_to_waypoint("G")
+        edge3 = graph._get_waypoint_by_id("S").get_edge_to_waypoint("F")
+        edge1.set_status(EdgeStatus.MISSING)
+        edge2.set_status(EdgeStatus.MISSING)
+        edge3.set_status(EdgeStatus.MISSING)
+        with pytest.raises(NoPathLeftError):
+            graph.go_to_next_best_waypoint()
+
+    def test_reset_object_detection_data_mixed(self, graph):
+        graph.set_target_waypoint("A")
+        edge1 = graph._get_waypoint_by_id("S").get_edge_to_waypoint("H")
+        edge2 = graph._get_waypoint_by_id("S").get_edge_to_waypoint("G")
+        edge1.set_status(EdgeStatus.POTENTIALLY_MISSING)
+        edge2.set_status(EdgeStatus.POTENTIALLY_MISSING)
+        graph._get_waypoint_by_id("F").set_status(WaypointStatus.POTENTIALLY_BLOCKED)
+        graph.go_to_next_best_waypoint()
+        assert edge1.get_status() == EdgeStatus.UNKNOWN
+        assert edge2.get_status() == EdgeStatus.UNKNOWN
+        assert graph._get_waypoint_by_id("F").get_status() == WaypointStatus.UNKNOWN
+
+    def test_no_paths_left_mixed(self, graph):
+        graph.set_target_waypoint("A")
+        edge1 = graph._get_waypoint_by_id("S").get_edge_to_waypoint("H")
+        edge2 = graph._get_waypoint_by_id("S").get_edge_to_waypoint("G")
+        edge1.set_status(EdgeStatus.MISSING)
+        edge2.set_status(EdgeStatus.MISSING)
+        graph._get_waypoint_by_id("F").set_status(WaypointStatus.BLOCKED)
+        with pytest.raises(NoPathLeftError):
+            graph.go_to_next_best_waypoint()
+
+    

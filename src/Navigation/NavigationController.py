@@ -50,7 +50,7 @@ class NavigationController():
         self.outgoing_waypoint_ids.append(angle.get_waypoint().get_id())
         
     def on_point_scanning_finished(self):
-        self.graph.remove_missing_angles()
+        self.graph.update_missing_angles()
         self.__next()
 
     def on_turned_to_target_line(self):
