@@ -45,4 +45,14 @@ class Configurator:
         Each key represents a waypoint and contains the angle values towards the outgoing waypoints.
         """
         return self.configuration["angles"]
+    
+    def get_communication(self):
+        """
+        Returns the communication configuration in the following format:
+        {
+            "device": "/dev/ttyAMA1",
+            "baudrate": 9600,
+        }
+        """
+        return self.configuration["communication"]
 
