@@ -6,6 +6,7 @@ from Navigation.Angle import Angle
 from Navigation.Edge import Edge
 from Configuration.Configurator import Configurator
 from Validation.Validator import Validator
+from Exceptions.NoPathLeftError import NoPathLeftError
 
 class Graph:
     """
@@ -19,6 +20,8 @@ class Graph:
         self.waypoints = []
         self.__initialize_waypoints()
         self.shortest_path_to_target = []
+        # this is used to prevent the object detection data from being reset multiple times
+        self.is_object_detection_data_reset = False
 
     def __initialize_waypoints(self):
         # waypoint X is the starting position which is not a physical waypoint
@@ -71,10 +74,33 @@ class Graph:
 
     def __store_shortest_path(self):
         node = self.target_waypoint
-        while (node.get_id() != self.current_waypoint.get_id()):
-            self.shortest_path_to_target.insert(0, node)
-            node = node.get_previous_node_to_this_waypoint()
-        print('[pi    ] shortest path: ', list(map(lambda n: n.get_id(), self.shortest_path_to_target)))
+        try:
+            while (node.get_id() != self.current_waypoint.get_id()):
+                self.shortest_path_to_target.insert(0, node)
+                node = node.get_previous_node_to_this_waypoint()
+            print('[pi    ] shortest path: ', list(map(lambda n: n.get_id(), self.shortest_path_to_target)))
+            self.is_object_detection_data_reset = False
+        except AttributeError:
+            # if the target waypoint is not reachable, the previous node is None and leads to an AttributeError
+            self.__handle_no_path_left()
+
+
+    def __handle_no_path_left(self):
+        # prevents infinite loops
+        if self.is_object_detection_data_reset:
+            raise NoPathLeftError()
+        print("[pi    ] no path to target waypoint left, resetting objecet detection data")
+        self.__reset_object_detection_data()
+        self.is_object_detection_data_reset = True
+        self.__get_next_best_waypoint()
+
+    def __reset_object_detection_data(self):
+        for waypoint in self.waypoints:
+            if waypoint.get_status() in [WaypointStatus.POTENTIALLY_BLOCKED, WaypointStatus.POTENTIALLY_FREE]:
+                waypoint.set_status(WaypointStatus.UNKNOWN)
+            for angle in waypoint.get_angles():
+                if angle.get_edge().get_status() in [EdgeStatus.POTENTIALLY_OBSTRUCTED, EdgeStatus.POTENTIALLY_FREE, EdgeStatus.POTENTIALLY_MISSING]:
+                    angle.get_edge().set_status(EdgeStatus.UNKNOWN)
  
     def go_back_to_previous_waypoint(self):
         temp_current_waypoint = self.current_waypoint
