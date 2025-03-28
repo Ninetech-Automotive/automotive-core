@@ -33,6 +33,12 @@ class Validator:
             for sub_key, sub_value in value.items():
                 if not isinstance(sub_value, float):
                     raise ValueError(f"The value of the '{sub_key}' key is not a float")
+        if "communication" not in configuration:
+            raise ValueError("The configuration file does not contain the 'communication' object")
+        if "device" not in configuration["communication"]:
+            raise ValueError("The configuration file does not contain the 'device' key in the 'communication' object")
+        if "baud" not in configuration["communication"]:
+            raise ValueError("The configuration file does not contain the 'baud' key in the 'communication' object")
                 
     @staticmethod
     def validate_waypoint_id_format(waypoint_id):
