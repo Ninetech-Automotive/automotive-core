@@ -99,14 +99,14 @@ class Graph:
         Validator.validate_edge_status(edge_status)
         return self.current_waypoint.update_angle(angle_value, waypoint_status, edge_status)
 
-    def remove_missing_angles(self):
+    def update_missing_angles(self):
         """
-        After point scanning, when an edge still has the status UNKNOWN, then this edge does not exist and is removed.
+        After point scanning, when an edge still has the status UNKNOWN, then this edge does not exist and the status is set to MISSING.
         """
         for angle in self.current_waypoint.get_angles():
             if angle.get_edge().get_status() == EdgeStatus.UNKNOWN:
-                angle.get_waypoint().remove_angle_to_waypoint(self.current_waypoint.get_id())
-                self.current_waypoint.remove_angle_to_waypoint(angle.get_waypoint().get_id())
+                angle.get_waypoint().set_angle_to_waypoint_as_missing(self.current_waypoint.get_id())
+                self.current_waypoint.set_angle_to_waypoint_as_missing(angle.get_waypoint().get_id())
 
     def __calculate_shortest_path(self):
         # dijkstra
@@ -114,7 +114,7 @@ class Graph:
         self.current_waypoint.set_weight_to_target(0)
         while(self.__has_next_unvisited_node()):
             current_node = self.__get_next_unvisited_node()
-            for angle in current_node.get_unblocked_angles():
+            for angle in current_node.get_possible_angles():
                 outgoing_node = angle.get_waypoint()
                 outgoing_edge = angle.get_edge()
                 calculated_weight_to_target_on_outgoing_node = current_node.get_weight_to_target() + outgoing_edge.get_weight()

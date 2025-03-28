@@ -114,10 +114,10 @@ class TestGraph:
         assert angle.get_edge().get_status() == EdgeStatus.FREE
         assert angle.get_waypoint().get_status() == WaypointStatus.FREE
 
-    def test_remove_missing_angles(self, graph):
+    def test_update_missing_angles(self, graph):
         graph.current_waypoint.get_angles()[0].get_edge().set_status(EdgeStatus.UNKNOWN)
-        graph.remove_missing_angles()
-        assert len(graph.current_waypoint.get_angles()) == 0
+        graph.update_missing_angles()
+        assert graph.current_waypoint.get_angles()[0].get_edge().get_status() == EdgeStatus.MISSING
 
     def test_cone_detected(self, graph):
         graph.cone_detected()
