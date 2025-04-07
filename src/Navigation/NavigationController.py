@@ -13,9 +13,8 @@ class NavigationController():
         self.outgoing_waypoint_ids = []
 
     def startup_procedure(self):
-        # TODO
-        pass
-
+        self.object_detector.start_up_process_detect()
+        
     def start(self, target_waypoint_id: str):
         Validator.validate_waypoint_id_format(target_waypoint_id)
         self.graph.set_target_waypoint(target_waypoint_id)

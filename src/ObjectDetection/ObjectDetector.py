@@ -7,3 +7,7 @@ class ObjectDetector(ABC):
     @abstractmethod
     def detect(self) -> Tuple[WaypointStatus, EdgeStatus]:
         pass
+    
+    @abstractmethod
+    def start_up_process_detect(self):
+        pass
