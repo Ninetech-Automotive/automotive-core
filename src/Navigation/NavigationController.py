@@ -40,6 +40,7 @@ class NavigationController():
             self.emitter.emit("scan_point")
         else:
             print('[pi    ] target reached')
+            self.emitter.emit("target_reached")
 
     def on_angle(self, angle_value: float):
         Validator.validate_angle_value(angle_value)
