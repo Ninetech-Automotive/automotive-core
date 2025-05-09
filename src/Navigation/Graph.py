@@ -46,9 +46,9 @@ class Graph:
         for waypoint_id, waypoint_data in Configurator().get_waypoints().items():
             waypoint = self._get_waypoint_by_id(waypoint_id)
             angles = []
-            for outgoing_waypoint_id, outgoing_waypoint_data in waypoint_data.edges.items():
+            for outgoing_waypoint_id, outgoing_waypoint_data in waypoint_data["edges"].items():
                 edge = Edge()
-                angle = outgoing_waypoint_data.angle
+                angle = outgoing_waypoint_data["angle"]
                 outgoing_waypoint = self._get_waypoint_by_id(outgoing_waypoint_id)
                 angle = Angle(outgoing_waypoint, angle, edge)
                 angles.append(angle)

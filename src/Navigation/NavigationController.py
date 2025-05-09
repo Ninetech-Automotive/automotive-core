@@ -16,7 +16,7 @@ class NavigationController():
         # TODO
         pass
 
-    def __start(self, target_waypoint_id: str):
+    def _start(self, target_waypoint_id: str):
         self.graph.set_target_waypoint(target_waypoint_id)
         self.outgoing_waypoint_ids.append("S")
         print("[pi    ] target set to ", target_waypoint_id)
@@ -65,4 +65,4 @@ class NavigationController():
 
     def on_set_target(self, target_waypoint_id: str):
         Validator.validate_waypoint_id_format(target_waypoint_id)
-        self.__start(target_waypoint_id)
+        self._start(target_waypoint_id)

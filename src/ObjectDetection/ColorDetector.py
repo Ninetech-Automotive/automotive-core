@@ -62,3 +62,7 @@ class ColorDetector(ObjectDetector):
 
         self.camera.disable()
         return waypoint_status, edge_status
+    
+
+    def start_up_process_detect():
+        pass

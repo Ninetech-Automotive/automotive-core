@@ -2,6 +2,8 @@ import pytest
 from Validation.Validator import Validator
 from Navigation.WaypointStatus import WaypointStatus
 from Navigation.EdgeStatus import EdgeStatus
+from pathlib import Path
+import json
 
 
 def test_validate_waypoint_status_valid():
@@ -39,56 +41,96 @@ def test_validate_angle_value_invalid_range():
 
 
 def test_validate_configuration_valid():
-    config = {
-        "communication": {"device": "/dev/ttyAMA1", "baud": 9600},
-        "angles": {"angle1": {"sub_angle1": 45.0}},
-    }
+    mock_config_path = Path(__file__).resolve().parent / "mock_config.json"
+    with open(mock_config_path, 'r') as file:
+        config = json.load(file)
     Validator.validate_configuration(config)
 
 
-def test_validate_configuration_missing_angles():
+def test_validate_configuration_missing_communication():
     config = {}
-    with pytest.raises(
-        ValueError, match="The configuration file does not contain the 'angles' object"
-    ):
+    with pytest.raises(ValueError, match="The configuration file does not contain the 'communication' object"):
         Validator.validate_configuration(config)
 
-
-def test_validate_configuration_invalid_value_type():
-    config = {"angles": {"angle1": "not_a_dict"}}
-    with pytest.raises(
-        ValueError, match="The value of the 'angle1' key is not a dictionary"
-    ):
+def test_validate_configuration_missing_device():
+    config = {"communication": {}}
+    with pytest.raises(ValueError, match="The configuration file does not contain the 'device' key in the 'communication' object"):
         Validator.validate_configuration(config)
 
-
-def test_validate_configuration_invalid_sub_value_type():
-    config = {"angles": {"angle1": {"sub_angle1": "not_a_float"}}}
-    with pytest.raises(
-        ValueError, match="The value of the 'sub_angle1' key is not a float"
-    ):
+def test_validate_configuration_missing_baud():
+    config = {"communication": {"device": "device_name"}}
+    with pytest.raises(ValueError, match="The configuration file does not contain the 'baud' key in the 'communication' object"):
         Validator.validate_configuration(config)
 
+def test_validate_configuration_missing_tolerances():
+    config = {"communication": {"device": "device_name", "baud": 9600}}
+    with pytest.raises(ValueError, match="The configuration file does not contain the 'tolerances' object"):
+        Validator.validate_configuration(config)
 
-def test_validate_waypoint_id_format_valid():
-    Validator.validate_waypoint_id_format("A")
+def test_validate_configuration_invalid_tolerance_type():
+    config = {
+        "communication": {"device": "device_name", "baud": 9600},
+        "tolerances": {"waypoint": "invalid", "obstacle": 10, "edge_x": 5, "edge_y": 5}
+    }
+    with pytest.raises(ValueError, match="The value of 'waypoint' in 'tolerances' must be an integer"):
+        Validator.validate_configuration(config)
 
+def test_validate_configuration_missing_waypoints():
+    config = {
+        "communication": {"device": "device_name", "baud": 9600},
+        "tolerances": {"waypoint": 10, "obstacle": 10, "edge_x": 5, "edge_y": 5}
+    }
+    with pytest.raises(ValueError, match="The configuration file does not contain the 'waypoints' object"):
+        Validator.validate_configuration(config)
 
-def test_validate_waypoint_id_format_invalid_type():
-    with pytest.raises(ValueError, match="Waypoint ID 1 is not a string"):
-        Validator.validate_waypoint_id_format(1)
+def test_validate_configuration_invalid_waypoint_data():
+    config = {
+        "communication": {"device": "device_name", "baud": 9600},
+        "tolerances": {"waypoint": 10, "obstacle": 10, "edge_x": 5, "edge_y": 5},
+        "waypoints": {"wp1": "invalid"}
+    }
+    with pytest.raises(ValueError, match="The data for waypoint 'wp1' must be a dictionary"):
+        Validator.validate_configuration(config)
 
+def test_validate_configuration_missing_waypoint_coordinates():
+    config = {
+        "communication": {"device": "device_name", "baud": 9600},
+        "tolerances": {"waypoint": 10, "obstacle": 10, "edge_x": 5, "edge_y": 5},
+        "waypoints": {"wp1": {"edges": {}}}
+    }
+    with pytest.raises(ValueError, match="Waypoint 'wp1' must contain 'x' and 'y' coordinates"):
+        Validator.validate_configuration(config)
 
-def test_validate_waypoint_id_format_invalid_length():
-    with pytest.raises(ValueError, match="Waypoint ID AB is not of length 1"):
-        Validator.validate_waypoint_id_format("AB")
+def test_validate_configuration_invalid_edge_data():
+    config = {
+        "communication": {"device": "device_name", "baud": 9600},
+        "tolerances": {"waypoint": 10, "obstacle": 10, "edge_x": 5, "edge_y": 5},
+        "waypoints": {
+            "wp1": {
+                "x": 0, "y": 0,
+                "edges": {"edge1": "invalid"}
+            }
+        }
+    }
+    with pytest.raises(ValueError, match="The data for edge 'edge1' in waypoint 'wp1' must be a dictionary"):
+        Validator.validate_configuration(config)
 
+def test_validate_configuration_valid():
+    config = {
+        "communication": {"device": "device_name", "baud": 9600},
+        "tolerances": {"waypoint": 10, "obstacle": 10, "edge_x": 5, "edge_y": 5},
+        "waypoints": {
+            "wp1": {
+                "x": 0, "y": 0,
+                "edges": {
+                    "edge1": {
+                        "angle": 45.0,
+                        "obstacle_coords": {"x": 1, "y": 2},
+                        "bounding_box_corners": {"from": "A", "to": "B"}
+                    }
+                }
+            }
+        }
+    }
+    Validator.validate_configuration(config)
 
-def test_validate_waypoint_id_format_invalid_character():
-    with pytest.raises(ValueError, match="Waypoint ID 1 is not a letter"):
-        Validator.validate_waypoint_id_format("1")
-
-
-def test_validate_waypoint_id_format_not_uppercase():
-    with pytest.raises(ValueError, match="Waypoint ID a is not uppercase"):
-        Validator.validate_waypoint_id_format("a")

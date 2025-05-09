@@ -33,4 +33,7 @@ class Configurator:
     
     def get_communication(self):
         return self.configuration["communication"]
+    
+    def get_tolerances(self):
+        return self.configuration["tolerances"]
 

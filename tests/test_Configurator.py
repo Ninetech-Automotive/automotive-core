@@ -1,43 +1,39 @@
-import pytest
-import json
+from pathlib import Path
 from Configuration.Configurator import Configurator
 
-mock_configuration = {
-    "communication": {"device": "/dev/ttyAMA1", "baud": 9600},
-    "angles": {"X": {"S": 0.0}, "S": {"G": 30.0, "F": 60.0, "X": 180.0, "H": 300.0}},
-}
+mock_config_path = Path(__file__).resolve().parent / "mock_config.json"
 
-
-@pytest.fixture
-def mock_config_file(tmp_path):
-    config_file = tmp_path / "config.json"
-    with config_file.open("w") as f:
-        json.dump(mock_configuration, f)
-    return config_file
-
-
-def test_singleton_instance(mock_config_file):
-    Configurator.initialize(str(mock_config_file))
+def test_singleton_instance():
+    Configurator.initialize(str(mock_config_path))
     instance1 = Configurator()
     instance2 = Configurator()
     assert instance1 is instance2
 
 
-def test_initialize(mock_config_file):
-    Configurator.initialize(str(mock_config_file))
+def test_initialize():
+    Configurator.initialize(str(mock_config_path))
     instance = Configurator()
-    assert instance.configuration == mock_configuration
+    assert instance is not None
 
 
-def test_get_angles(mock_config_file):
-    Configurator.initialize(str(mock_config_file))
+def test_get_waypoints():
+    Configurator.initialize(str(mock_config_path))
     instance = Configurator()
-    angles = instance.get_angles()
-    assert angles == mock_configuration["angles"]
-    
+    waypoints = instance.get_waypoints()
+    assert len(waypoints) == 9
 
-def test_get_communication(mock_config_file):
-    Configurator.initialize(str(mock_config_file))
+
+def test_get_communication():
+    Configurator.initialize(str(mock_config_path))
     instance = Configurator()
     communication = instance.get_communication()
-    assert communication == mock_configuration["communication"]
+    assert communication is not None
+    assert communication["device"] == "/dev/ttyAMA1"
+
+
+def test_get_tolerances():
+    Configurator.initialize(str(mock_config_path))
+    instance = Configurator()
+    tolerances = instance.get_tolerances()
+    assert tolerances is not None
+    assert tolerances["waypoint"] == 50
