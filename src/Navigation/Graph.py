@@ -43,11 +43,12 @@ class Graph:
         self.__load_configuration_angles()
 
     def __load_configuration_angles(self):
-        for waypoint_id, angle_values in Configurator().get_angles().items():
+        for waypoint_id, waypoint_data in Configurator().get_waypoints().items():
             waypoint = self._get_waypoint_by_id(waypoint_id)
             angles = []
-            for outgoing_waypoint_id, angle in angle_values.items():
+            for outgoing_waypoint_id, outgoing_waypoint_data in waypoint_data.edges.items():
                 edge = Edge()
+                angle = outgoing_waypoint_data.angle
                 outgoing_waypoint = self._get_waypoint_by_id(outgoing_waypoint_id)
                 angle = Angle(outgoing_waypoint, angle, edge)
                 angles.append(angle)
