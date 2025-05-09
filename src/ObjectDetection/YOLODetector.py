@@ -7,46 +7,38 @@ from Navigation.Waypoint import Waypoint
 from Navigation.EdgeStatus import EdgeStatus
 from Navigation.Angle import Angle
 from ObjectDetection.ObjectDetector import ObjectDetector
-
+from Navigation.Graph import Graph
+from Configuration.Configurator import Configurator
 
 
 class YOLODetector(ObjectDetector):
-    def __init__(self, camera, graph=None, center_stripe_percentage=0.5):
+    def __init__(self, camera, center_stripe_percentage=0.5):
         self.camera = camera
-        self.graph = graph
-        path_to_model = Path(__file__).resolve().parent / "best.pt"
+        path_to_object_model = Path(__file__).resolve().parent / "best.pt"
         path_to_line_model = Path(__file__).resolve().parent / "line_model.pt"
-        self.model = YOLO(path_to_model)
+        self.object_model = YOLO(path_to_object_model)
         self.line_model = YOLO(path_to_line_model)
         # percentage of the image width that is considered the center stripe and is checked for obstacles
         self.center_stripe_percentage = center_stripe_percentage
-        self.waypoints_config = self.__load_config("waypoints_config.json")
-        self.tolerances = self.__load_config("waypoints_tolerance.json")
-        self.obstacles_config = self.__load_config("obstacles_config.json")
-        self.lines_config = self.__load_config("lines_config.json")
-
-    def __load_config(self, filename):
-        config_path = Path(__file__).resolve().parent.parent / "Configuration" / filename
-        with open(config_path, "r") as file:
-            return json.load(file)
 
     def detect(self):
         frame = self.camera.get_image_array()
-        results = self.model.predict(frame, imgsz=640)
+        results = self.object_model.predict(frame, imgsz=640)
         objects = self.__parse_results(results)
         return self.__get_object_status(objects)
     
     def start_up_process_detect(self):
-        if self.graph is None:
-            raise ValueError("Graph is not set. Please provide a graph instance.")
+        graph = Graph()
         frame = self.camera.get_image_array()
-        results = self.model.predict(frame, imgsz=640)
+        object_results = self.object_model.predict(frame, imgsz=640)
         line_results = self.line_model.predict(frame, imgsz=640)
-        objects = self.__parse_results(results)
+        objects = self.__parse_results(object_results)
+        # self.__print_object_coordinates(objects)
+        # self.__visualize_results(line_results)
         line_objects = self.__parse_results(line_results, line_model=True)
-        self.__print_object_coordinates(line_objects)
-        self.__visualize_results(line_results)
-        return self.__get_map_status(objects, line_objects)
+        self.__update_waypoints(graph, objects, "cone")
+        self.__update_edges(graph, objects, line_objects, ["obstacle", "edge"])
+        return graph
 
     def __get_object_status(self, objects):
         waypoint_status = WaypointStatus.POTENTIALLY_FREE if not self.__check_for_label_in_center_stripe(objects, "cone") else WaypointStatus.POTENTIALLY_BLOCKED
@@ -65,54 +57,61 @@ class YOLODetector(ObjectDetector):
                     return True
         return False
     
-    def __get_map_status(self, objects, line_objects):
-        return {"Waypoint_Statuses": self.__update_waypoints(objects, "cone"),
-                "Edge_Statuses": self.__update_edges(objects, line_objects, ["obstacle", "edge"]),}
-            
-    
-    def __update_waypoints(self, objects, label):
+
+    def __update_waypoints(self, graph, objects, label):
         waypoint_statuses = {}
-        tolerance = self.tolerances.get("waypoint_tolerance", 0)
-        for waypoint_name, coords in self.waypoints_config.items():
-            waypoint = self.graph._get_waypoint_by_id(waypoint_name)
+        tolerance = Configurator().get_tolerances()["waypoint"]
+        waypoints = Configurator().get_waypoints()
+        for waypoint_name, waypoint_data in waypoints.items():
+            x = waypoint_data["x"]
+            y = waypoint_data["y"]
+            waypoint = graph._get_waypoint_by_id(waypoint_name)
             for obj in objects:
                 if obj["label"] == label:
-                    if (coords["x"] - tolerance) <= obj["bounding_box"]["x_min"] <= (coords["x"] + tolerance) and \
-                       (coords["y"] - tolerance) <= obj["bounding_box"]["y_min"] <= (coords["y"] + tolerance):
-                        waypoint.set_status(WaypointStatus.POTENTIALLY_BLOCKED) #Set status to POTENTIALLY_BLOCKED if cone is detected
-                        break #check next waypoint
+                    if (x - tolerance) <= obj["bounding_box"]["x_min"] <= (x + tolerance) and \
+                       (y - tolerance) <= obj["bounding_box"]["y_max"] <= (y + tolerance):
+                        #Set status to POTENTIALLY_BLOCKED if cone is detected
+                        waypoint.set_status(WaypointStatus.POTENTIALLY_BLOCKED)
+                        # check next waypoint
+                        break
 
             if waypoint.get_status() != WaypointStatus.POTENTIALLY_BLOCKED:
                 waypoint.set_status(WaypointStatus.POTENTIALLY_FREE)
             waypoint_statuses[waypoint_name] = waypoint.get_status()
         return waypoint_statuses
     
-    def __update_edges(self, objects, line_objects, labels):
+    def __update_edges(self, graph, objects, line_objects, labels):
         edge_statuses = {}
-        obstacle_tolerance = self.obstacles_tolerance.get("obstacle_tolerance", 0)
-        edge_tolerance_x = self.obstacles_tolerance.get("edge_tolerance_x", 0)
-        edge_tolerance_y = self.obstacles_tolerance.get("edge_tolerance_y", 0)
-        waypoints_config = self.waypoints_config
-        lines_config = self.lines_config
-        for waypoint_id, outgoing_waypoint_names in self.obstacles_config.items():
-            waypoint = self.graph._get_waypoint_by_id(waypoint_id)
+        obstacle_tolerance = Configurator().get_tolerances()["obstacle"]
+        edge_tolerance_x = Configurator().get_tolerances()["edge_x"]
+        edge_tolerance_y = Configurator().get_tolerances()["edge_y"]
+        waypoints = Configurator().get_waypoints()
+        for waypoint_id, waypoint_data in waypoints.items():
+            x = waypoint_data["x"]
+            y = waypoint_data["y"]
+            waypoint = graph._get_waypoint_by_id(waypoint_id)
             angles = waypoint.get_angles()
             # iterate over all angles of the waypoint
             for angle in angles:
                 outgoing_waypoint_id = angle.get_waypoint().get_id()
                 if outgoing_waypoint_id == "X":
                     continue
+                edge_data = waypoint_data["edges"][outgoing_waypoint_id]
+                bounding_box_corners = edge_data["bounding_box_corners"]
                 edge = angle.get_edge()
-                edge_waypoint_coords, edge_outgoing_waypoint_coords = self.__get_relevant_edge_coords(lines_config, waypoint_id, outgoing_waypoint_id) #which coordinates to use for the edge
-                waypoint_x_coords, waypoint_y_coords = waypoints_config[waypoint_id]["x"], waypoints_config[waypoint_id]["y"]#get config coordinates of the waypoint
-                outgoing_waypoint_x_coords, outgoing_waypoint_y_coords = waypoints_config[outgoing_waypoint_id]["x"], waypoints_config[outgoing_waypoint_id]["y"] #get config coordinates of the outgoing waypoint
+                outgoing_x = waypoints[outgoing_waypoint_id]["x"]
+                outgoing_y = waypoints[outgoing_waypoint_id]["y"]
+                edge_waypoint_coords, edge_outgoing_waypoint_coords = self.__get_relevant_edge_coords(bounding_box_corners) #which coordinates to use for the edge
                 # Check for obstucted edges
                 for obj in objects:
                     if obj["label"] == labels[0]:
-                        if (outgoing_waypoint_names[outgoing_waypoint_id]["x_min"] - obstacle_tolerance) <= obj["bounding_box"]["x_min"] <= (outgoing_waypoint_names[outgoing_waypoint_id]["x_min"] + obstacle_tolerance) and \
-                            (outgoing_waypoint_names[outgoing_waypoint_id]["y_min"] - obstacle_tolerance) <= obj["bounding_box"]["y_min"] <= (outgoing_waypoint_names[outgoing_waypoint_id]["y_min"] + obstacle_tolerance):
+                        obstacle_x = edge_data["obstacle_coords"]["x"]
+                        obstacle_y = edge_data["obstacle_coords"]["y"]
+                        if (obstacle_x - obstacle_tolerance) <= obj["bounding_box"]["x_min"] <= (obstacle_x + obstacle_tolerance) and \
+                            (obstacle_y - obstacle_tolerance) <= obj["bounding_box"]["y_max"] <= (obstacle_y + obstacle_tolerance):
                             edge.set_status(EdgeStatus.POTENTIALLY_OBSTRUCTED)
                             continue #check next edge
+
 
                 # Check for free edges
                 for line_obj in line_objects:
@@ -124,10 +123,10 @@ class YOLODetector(ObjectDetector):
                         x2 = bbox[edge_outgoing_waypoint_coords[0]]
                         y2 = bbox[edge_outgoing_waypoint_coords[1]]
                         # Check the conditions
-                        within_x1 = (waypoint_x_coords - edge_tolerance_x) <= x1 <= (waypoint_x_coords + edge_tolerance_x)
-                        within_y1 = (waypoint_y_coords - edge_tolerance_y) <= y1 <= (waypoint_y_coords + edge_tolerance_y)
-                        within_x2 = (outgoing_waypoint_x_coords - edge_tolerance_x) <= x2 <= (outgoing_waypoint_x_coords + edge_tolerance_x)
-                        within_y2 = (outgoing_waypoint_y_coords - edge_tolerance_y) <= y2 <= (outgoing_waypoint_y_coords + edge_tolerance_y)
+                        within_x1 = (x - edge_tolerance_x) <= x1 <= (x + edge_tolerance_x)
+                        within_y1 = (y - edge_tolerance_y) <= y1 <= (y + edge_tolerance_y)
+                        within_x2 = (outgoing_x - edge_tolerance_x) <= x2 <= (outgoing_x + edge_tolerance_x)
+                        within_y2 = (outgoing_y - edge_tolerance_y) <= y2 <= (outgoing_y + edge_tolerance_y)
                         # Special case for waypoint_id == "S"
                         if waypoint_id == "S":
                             condition_met = x1 < 4032 and within_y1 and within_x2 and within_y2
@@ -142,18 +141,19 @@ class YOLODetector(ObjectDetector):
                                 break  # check next edge
                         
                 edge_statuses[f"{waypoint_id}_to_{outgoing_waypoint_id}"] = edge.get_status()
+                print(edge_statuses)
         return edge_statuses
     
-    def __get_relevant_edge_coords(self,lines_config, waypoint_name, outgoing_waypoint_id):
-        for key, value in lines_config.items():
-            if key in (waypoint_name, outgoing_waypoint_id):
-                for sub_key, sub_value in value.items():
-                    if sub_key in (waypoint_name, outgoing_waypoint_id) and key != sub_key:
-                        if key == waypoint_name:
-                            return sub_value[0:2], sub_value[2:4]
-                        else:
-                            return sub_value[2:4], sub_value[0:2]
-        return None, None  # Falls nichts gefunden wird
+    def __get_relevant_edge_coords(self, bounding_box_corners):
+        coords = {
+            "UPPER_LEFT": ["x_min", "y_min"],
+            "UPPER_RIGHT": ["x_max", "y_min"],
+            "LOWER_LEFT": ["x_min", "y_max"],
+            "LOWER_RIGHT": ["x_max", "y_max"],
+        }
+        coords_from = coords[bounding_box_corners["from"]]
+        coords_to = coords[bounding_box_corners["to"]]
+        return coords_from, coords_to
     
 
     def __print_object_coordinates(self, objects):
@@ -170,10 +170,42 @@ class YOLODetector(ObjectDetector):
             print(f"Detected {label} with confidence {confidence:.2f} at x_min: {x_min}, x_max: {x_max}, y_min: {y_min}, y_max: {y_max} with size ({width}, {height})")
 
     def __visualize_results(self, results):
+        def mouse_callback(event, x, y, flags, param):
+            nonlocal annotated_frame
+            if event == cv2.EVENT_LBUTTONDOWN:  # Left mouse button click
+                # Clear the top-right corner
+                cv2.rectangle(annotated_frame, (annotated_frame.shape[1] - 200, 0), (annotated_frame.shape[1], 50), (0, 0, 0), -1)
+                # Write the coordinates
+                text = f"x: {x}, y: {y}"
+                cv2.putText(annotated_frame, text, (annotated_frame.shape[1] - 190, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
+                cv2.imshow("Captured Image", annotated_frame)
+
         annotated_frame = results[0].plot()
+        waypoints = Configurator().get_waypoints()
+        for waypoint_id, waypoint_data in waypoints.items():
+            x = waypoint_data["x"]
+            y = waypoint_data["y"]
+            self.__write_text(annotated_frame, waypoint_id, x, y)
+            for outgoint_waypoint_id, outgoint_waypoint_data in waypoint_data["edges"].items():
+                obstacle_x = outgoint_waypoint_data["obstacle_coords"]["x"]
+                obstacle_y = outgoint_waypoint_data["obstacle_coords"]["y"]
+                self.__write_text(annotated_frame, f"{waypoint_id}-{outgoint_waypoint_id}", obstacle_x, obstacle_y)
+
+        cv2.namedWindow("Captured Image")
+        cv2.setMouseCallback("Captured Image", mouse_callback)
         cv2.imshow("Captured Image", annotated_frame)
         cv2.waitKey(0)
         cv2.destroyAllWindows()
+
+    def __write_text(self, annotated_frame, text, x, y):
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        font_scale = 2
+        thickness = 3
+        text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
+        background_top_left = (x - 10, y - text_size[1] - 10)
+        background_bottom_right = (x + text_size[0] + 10, y + 10)
+        cv2.rectangle(annotated_frame, background_top_left, background_bottom_right, (0, 0, 0), -1)
+        cv2.putText(annotated_frame, text, (x, y), font, font_scale, (255, 255, 255), thickness)
 
     def __parse_results(self, results, line_model=False):
         objects = []
@@ -181,7 +213,7 @@ class YOLODetector(ObjectDetector):
             x_min, y_min, x_max, y_max = map(int, result.xyxy[0])
             width = x_max - x_min
             height = y_max - y_min
-            label = self.model.names[int(result.cls[0])] if not line_model else self.line_model.names[int(result.cls[0])]
+            label = self.object_model.names[int(result.cls[0])] if not line_model else self.line_model.names[int(result.cls[0])]
             confidence = result.conf[0].item()
             objects.append(
                 {
