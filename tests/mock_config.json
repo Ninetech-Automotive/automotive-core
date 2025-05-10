@@ -4,10 +4,10 @@
         "baud": 9600
     },
     "tolerances": {
-        "waypoint": 100,
+        "waypoint": 200,
         "obstacle": 100,
-        "edge_x": 100,
-        "edge_y": 100
+        "edge_x": 200,
+        "edge_y": 200
     },
     "waypoints": {
         "X": {
@@ -128,8 +128,8 @@
             }
         },
         "G": {
-            "x": 1950,
-            "y": 1350,
+            "x": 2000,
+            "y": 1300,
             "edges": {
                 "C": {
                     "angle": 30.0,
@@ -188,8 +188,8 @@
                         "y": 1160
                     },
                     "bounding_box_corners": {
-                        "from": "LOWER_LEFT",
-                        "to": "UPPER_RIGHT"
+                        "from": "LOWER_RIGHT",
+                        "to": "UPPER_LEFT"
                     }
                 },
                 "S": {
@@ -299,8 +299,8 @@
                         "y": 1210
                     },
                     "bounding_box_corners": {
-                        "from": "UPPER_LEFT",
-                        "to": "LOWER_RIGHT"
+                        "from": "UPPER_RIGHT",
+                        "to": "LOWER_LEFT"
                     }
                 }
             }
@@ -388,8 +388,8 @@
                         "y": 1080
                     },
                     "bounding_box_corners": {
-                        "from": "LOWER_LEFT",
-                        "to": "UPPER_RIGHT"
+                        "from": "UPPER_RIGHT",
+                        "to": "LOWER_LEFT"
                     }
                 }
             }

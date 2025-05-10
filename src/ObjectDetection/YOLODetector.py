@@ -87,6 +87,8 @@ class YOLODetector(ObjectDetector):
         edge_tolerance_y = Configurator().get_tolerances()["edge_y"]
         waypoints = Configurator().get_waypoints()
         for waypoint_id, waypoint_data in waypoints.items():
+            if waypoint_id == "X":
+                continue
             x = waypoint_data["x"]
             y = waypoint_data["y"]
             waypoint = graph._get_waypoint_by_id(waypoint_id)
@@ -129,19 +131,25 @@ class YOLODetector(ObjectDetector):
                         within_y2 = (outgoing_y - edge_tolerance_y) <= y2 <= (outgoing_y + edge_tolerance_y)
                         # Special case for waypoint_id == "S"
                         if waypoint_id == "S":
-                            condition_met = x1 < 4032 and within_y1 and within_x2 and within_y2
-                        if outgoing_waypoint_id == "S":
-                            condition_met = within_x1 and within_y1 and x2 < 4032 and within_y2
+                            condition_met = y1 > 1900 and within_x2 and within_y2
+                        elif outgoing_waypoint_id == "S":
+                            condition_met = within_x1 and within_y1 and y2 > 1900
                         else:
                             condition_met = within_x1 and within_y1 and within_x2 and within_y2
                         # Update edge status if conditions are met
                         if condition_met:
                             if edge.get_status() != EdgeStatus.POTENTIALLY_OBSTRUCTED:
                                 edge.set_status(EdgeStatus.POTENTIALLY_FREE)
-                                break  # check next edge
-                        
+                                break  # check next edge    
                 edge_statuses[f"{waypoint_id}_to_{outgoing_waypoint_id}"] = edge.get_status()
-                print(edge_statuses)
+
+                # If no line object was found, set edge status to POTENTIALLY_MISSING
+                if edge.get_status() == EdgeStatus.UNKNOWN:
+                    edge.set_status(EdgeStatus.POTENTIALLY_MISSING)
+
+                edge_statuses[f"{waypoint_id}_to_{outgoing_waypoint_id}"] = edge.get_status()
+
+        print(edge_statuses)
         return edge_statuses
     
     def __get_relevant_edge_coords(self, bounding_box_corners):
@@ -177,10 +185,18 @@ class YOLODetector(ObjectDetector):
                 cv2.rectangle(annotated_frame, (annotated_frame.shape[1] - 200, 0), (annotated_frame.shape[1], 50), (0, 0, 0), -1)
                 # Write the coordinates
                 text = f"x: {x}, y: {y}"
-                cv2.putText(annotated_frame, text, (annotated_frame.shape[1] - 190, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 255), 2)
-                cv2.imshow("Captured Image", annotated_frame)
+                cv2.putText(annotated_frame, text, (annotated_frame.shape[1] - 190, 30), cv2.FONT_HERSHEY_SIMPLEX, 0.4, (255, 255, 255), 1)
+                cv2.imshow("Captured Image", annotated_frame)  # Update the displayed frame
 
-        annotated_frame = results[0].plot()
+        annotated_frame = results[0].orig_img.copy()
+        for result in results[0].boxes:
+            x_min, y_min, x_max, y_max = map(int, result.xyxy[0])
+            confidence = result.conf[0].item()
+            # Draw thicker bounding boxes
+            cv2.rectangle(annotated_frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 2)
+            text = f"({confidence:.2f})"
+            cv2.putText(annotated_frame, text, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.3, (0, 255, 0), 1)
+
         waypoints = Configurator().get_waypoints()
         for waypoint_id, waypoint_data in waypoints.items():
             x = waypoint_data["x"]
@@ -199,11 +215,11 @@ class YOLODetector(ObjectDetector):
 
     def __write_text(self, annotated_frame, text, x, y):
         font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 2
-        thickness = 3
+        font_scale = 0.5  # Reduced font scale for smaller text
+        thickness = 1  # Reduced thickness for smaller text
         text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
-        background_top_left = (x - 10, y - text_size[1] - 10)
-        background_bottom_right = (x + text_size[0] + 10, y + 10)
+        background_top_left = (x - 5, y - text_size[1] - 5)
+        background_bottom_right = (x + text_size[0] + 5, y + 5)
         cv2.rectangle(annotated_frame, background_top_left, background_bottom_right, (0, 0, 0), -1)
         cv2.putText(annotated_frame, text, (x, y), font, font_scale, (255, 255, 255), thickness)
 
