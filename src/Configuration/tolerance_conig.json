@@ -1,0 +1,6 @@
+{
+    "waypoint_tolerance" : 50,
+    "obstacle_tolerance" : 50,
+    "edge_tolerance_x": 50,
+    "edge_tolerance_y": 50
+}

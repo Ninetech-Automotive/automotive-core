@@ -6,31 +6,16 @@ from Navigation.WaypointStatus import WaypointStatus
 from Navigation.EdgeStatus import EdgeStatus
 from Configuration.Configurator import Configurator
 from Exceptions.NoPathLeftError import NoPathLeftError
+from pathlib import Path
 import json
 
 
 class TestGraph:
 
     @pytest.fixture(scope="class", autouse=True)
-    def setup_configurator(self, tmp_path_factory):
-        config_data = {
-            "communication": {"device": "/dev/ttyAMA1", "baud": 9600},
-            "angles": {
-                "X": {"S": 0.0},
-                "S": {"G": 30.0, "F": 60.0, "X": 180.0, "H": 300.0},
-                "H": {"A": 0.0, "I": 60.0, "G": 90.0, "S": 118.0},
-                "G": {"C": 30.0, "F": 90.0, "S": 210.0, "H": 270.0, "I": 330.0},
-                "F": {"C": 0.0, "S": 240.0, "G": 270.0},
-                "I": {"B": 0.0, "C": 60.0, "G": 150.0, "H": 240.0, "A": 300.0},
-                "A": {"B": 60.0, "I": 120.0, "H": 180.0},
-                "C": {"F": 180.0, "G": 210.0, "I": 240.0, "B": 300.0},
-                "B": {"C": 120.0, "I": 180.0, "A": 240.0},
-            },
-        }
-        config_file = tmp_path_factory.mktemp("config") / "config.json"
-        with config_file.open("w") as f:
-            json.dump(config_data, f)
-        Configurator.initialize(str(config_file))
+    def setup_configurator(self):
+        mock_config_path = Path(__file__).resolve().parent / "mock_config.json"
+        Configurator.initialize(str(mock_config_path))
 
     @pytest.fixture
     def graph(self):

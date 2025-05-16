@@ -60,16 +60,16 @@ class Waypoint:
     
     def set_angle_to_waypoint_as_missing(self, waypoint_id: str):
         Validator.validate_waypoint_id_format(waypoint_id)
-        angle = self.__get_angle_to_waypoint(waypoint_id)
+        angle = self._get_angle_to_waypoint(waypoint_id)
         angle.get_edge().set_status(EdgeStatus.MISSING)
         
     
-    def __get_angle_to_waypoint(self, waypoint_id: str):
+    def _get_angle_to_waypoint(self, waypoint_id: str):
         return [a for a in self.angles if a.get_waypoint().get_id() == waypoint_id][0]
     
     def get_edge_to_waypoint(self, waypoint_id: str):
         Validator.validate_waypoint_id_format(waypoint_id)
-        angle = self.__get_angle_to_waypoint(waypoint_id)
+        angle = self._get_angle_to_waypoint(waypoint_id)
         return angle.get_edge()
     
     def update_angle(self, value: float, waypoint_status: WaypointStatus, edge_status: EdgeStatus):

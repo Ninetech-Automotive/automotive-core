@@ -1,0 +1,30 @@
+{
+    "S": {
+        "F": ["x_min", "y_min", "x_max", "y_max"],
+        "G": ["x_min", "y_min", "x_max", "y_max"],
+        "H": ["x_max", "y_min", "x_min", "y_max"]
+    },
+    "H": {
+        "G": ["x_min", "y_min", "x_max", "y_min"],
+        "I": ["x_min", "y_min", "x_max", "y_max"],
+        "A": ["x_min", "y_min", "x_max", "y_max"]
+    },
+    "I": {
+        "A": ["x_max", "y_min", "x_min", "y_max"],
+        "B": ["x_min", "y_min", "x_min", "y_max"],
+        "C": ["x_min", "y_min", "x_max", "y_max"]
+    },
+    "G": {
+        "F": ["x_min", "y_min", "x_max", "y_max"],
+        "C": ["x_min", "y_min", "x_max", "y_max"]
+    },
+    "F": {
+        "C": ["x_max", "y_min", "x_min", "y_max"]
+    },
+    "C": {
+        "B": ["x_max", "y_min", "x_min", "y_max"]
+    },
+    "A": {
+        "B": ["x_min", "y_min", "x_max", "y_max"]
+    }
+}

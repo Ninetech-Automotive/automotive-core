@@ -1,0 +1,47 @@
+{
+    "S": {
+        "G": {"x_min": 1856, "x_max": 0, "y_min": 1527, "y_max": 0},
+        "F": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "X": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "H": {"x_min": 1850, "x_max": 0, "y_min": 1530, "y_max": 0}
+    },
+    "H": {
+        "A": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "I": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "G": {"x_min": 1172, "x_max": 0, "y_min": 1322, "y_max": 0},
+        "S": {"x_min": 1850, "x_max": 0, "y_min": 1530, "y_max": 0}
+    },
+    "G": {
+        "C": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "F": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "S": {"x_min": 1856, "x_max": 0, "y_min": 1527, "y_max": 0},
+        "H": {"x_min": 1172, "x_max": 0, "y_min": 1322, "y_max": 0}
+    },
+    "F": {
+        "C": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "S": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "G": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0}
+    },
+    "I": {
+        "B": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "C": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "H": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "A": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0}
+    },
+    "A": {
+        "B": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "I": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "H": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0}
+    },
+    "C": {
+        "F": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "G": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "I": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "B": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0}
+    },
+    "B": {
+        "C": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "I": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0},
+        "A": {"x_min": 0, "x_max": 0, "y_min": 0, "y_max": 0}
+    }
+}

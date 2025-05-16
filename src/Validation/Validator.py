@@ -25,20 +25,54 @@ class Validator:
         
     @staticmethod
     def validate_configuration(configuration):
-        if "angles" not in configuration:
-            raise ValueError("The configuration file does not contain the 'angles' object")
-        for key, value in configuration["angles"].items():
-            if not isinstance(value, dict):
-                raise ValueError(f"The value of the '{key}' key is not a dictionary")
-            for sub_key, sub_value in value.items():
-                if not isinstance(sub_value, float):
-                    raise ValueError(f"The value of the '{sub_key}' key is not a float")
+        # Validate communication section
         if "communication" not in configuration:
             raise ValueError("The configuration file does not contain the 'communication' object")
         if "device" not in configuration["communication"]:
             raise ValueError("The configuration file does not contain the 'device' key in the 'communication' object")
         if "baud" not in configuration["communication"]:
             raise ValueError("The configuration file does not contain the 'baud' key in the 'communication' object")
+
+        # Validate tolerances section
+        if "tolerances" not in configuration:
+            raise ValueError("The configuration file does not contain the 'tolerances' object")
+        for key in ["waypoint", "obstacle", "edge_x", "edge_y"]:
+            if key not in configuration["tolerances"]:
+                raise ValueError(f"The configuration file does not contain the '{key}' key in the 'tolerances' object")
+            if not isinstance(configuration["tolerances"][key], int):
+                raise ValueError(f"The value of '{key}' in 'tolerances' must be an integer")
+
+        # Validate waypoints section
+        if "waypoints" not in configuration:
+            raise ValueError("The configuration file does not contain the 'waypoints' object")
+        for waypoint_id, waypoint_data in configuration["waypoints"].items():
+            if not isinstance(waypoint_data, dict):
+                raise ValueError(f"The data for waypoint '{waypoint_id}' must be a dictionary")
+            if "x" not in waypoint_data or "y" not in waypoint_data:
+                raise ValueError(f"Waypoint '{waypoint_id}' must contain 'x' and 'y' coordinates")
+            if not isinstance(waypoint_data["x"], int) or not isinstance(waypoint_data["y"], int):
+                raise ValueError(f"The 'x' and 'y' coordinates of waypoint '{waypoint_id}' must be integers")
+            if "edges" not in waypoint_data:
+                raise ValueError(f"Waypoint '{waypoint_id}' must contain an 'edges' object")
+            for edge_id, edge_data in waypoint_data["edges"].items():
+                if not isinstance(edge_data, dict):
+                    raise ValueError(f"The data for edge '{edge_id}' in waypoint '{waypoint_id}' must be a dictionary")
+                if "angle" not in edge_data or not isinstance(edge_data["angle"], float):
+                    raise ValueError(f"Edge '{edge_id}' in waypoint '{waypoint_id}' must contain a float 'angle'")
+                if "obstacle_coords" not in edge_data:
+                    raise ValueError(f"Edge '{edge_id}' in waypoint '{waypoint_id}' must contain 'obstacle_coords'")
+                if not isinstance(edge_data["obstacle_coords"], dict):
+                    raise ValueError(f"'obstacle_coords' in edge '{edge_id}' of waypoint '{waypoint_id}' must be a dictionary")
+                for coord in ["x", "y"]:
+                    if coord not in edge_data["obstacle_coords"] or not isinstance(edge_data["obstacle_coords"][coord], int):
+                        raise ValueError(f"'obstacle_coords.{coord}' in edge '{edge_id}' of waypoint '{waypoint_id}' must be an integer")
+                if "bounding_box_corners" not in edge_data:
+                    raise ValueError(f"Edge '{edge_id}' in waypoint '{waypoint_id}' must contain 'bounding_box_corners'")
+                if not isinstance(edge_data["bounding_box_corners"], dict):
+                    raise ValueError(f"'bounding_box_corners' in edge '{edge_id}' of waypoint '{waypoint_id}' must be a dictionary")
+                for corner in ["from", "to"]:
+                    if corner not in edge_data["bounding_box_corners"] or not isinstance(edge_data["bounding_box_corners"][corner], str):
+                        raise ValueError(f"'bounding_box_corners.{corner}' in edge '{edge_id}' of waypoint '{waypoint_id}' must be a string")
                 
     @staticmethod
     def validate_waypoint_id_format(waypoint_id):

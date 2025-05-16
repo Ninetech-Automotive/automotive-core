@@ -28,31 +28,12 @@ class Configurator:
             cls._instance = cls()
         return cls._instance
 
-    def get_angles(self):
-        """
-        Returns the angle float values as a dict in the following format:
-        {
-            "X": {
-                "S": 0.0
-            },
-            "S": {
-                "G": 30.0,
-                "F": 60.0,
-                "X": 180.0,
-                "H": 300.0
-            }
-        }
-        Each key represents a waypoint and contains the angle values towards the outgoing waypoints.
-        """
-        return self.configuration["angles"]
+    def get_waypoints(self):
+        return self.configuration["waypoints"]
     
     def get_communication(self):
-        """
-        Returns the communication configuration in the following format:
-        {
-            "device": "/dev/ttyAMA1",
-            "baudrate": 9600,
-        }
-        """
         return self.configuration["communication"]
+    
+    def get_tolerances(self):
+        return self.configuration["tolerances"]
 
