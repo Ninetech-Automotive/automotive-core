@@ -33,7 +33,14 @@ class NavigationController():
         next_best_waypoint = self.graph.get_next_best_waypoint()
         angle_value = current_waypoint.get_value_from_angle_to_waypoint(next_best_waypoint.get_id())
         self.currently_turned_angle = angle_value
+        angle_value = self.__optimize_angle_direction(angle_value)
         self.emitter.emit(f"target_line_angle:{angle_value}")
+
+    def __optimize_angle_direction(self, angle_value: float):
+        if angle_value > 180:
+            return angle_value - 360
+        else:
+            return angle_value
 
     def on_pong(self):
         # continue with the next waypoint if communication test was successful

@@ -5,7 +5,7 @@
     },
     "tolerances": {
         "waypoint": 200,
-        "obstacle": 100,
+        "obstacle": 200,
         "edge_x": 200,
         "edge_y": 200
     },

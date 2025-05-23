@@ -80,37 +80,37 @@ class TestYOLODetector:
         waypoints_with_cone = ["G", "B"]
         for waypoint in waypoints_with_cone:
             assert graph._get_waypoint_by_id(waypoint).get_status() == WaypointStatus.POTENTIALLY_BLOCKED
-        assert graph._get_waypoint_by_id("S")._get_angle_to_waypoint("H").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
-        assert graph._get_waypoint_by_id("H")._get_angle_to_waypoint("S").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
-        assert graph._get_waypoint_by_id("S")._get_angle_to_waypoint("G").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
-        assert graph._get_waypoint_by_id("G")._get_angle_to_waypoint("S").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
-        assert graph._get_waypoint_by_id("G")._get_angle_to_waypoint("H").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
-        assert graph._get_waypoint_by_id("H")._get_angle_to_waypoint("G").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
+        assert graph._get_waypoint_by_id("S").get_angle_to_waypoint("H").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
+        assert graph._get_waypoint_by_id("H").get_angle_to_waypoint("S").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
+        assert graph._get_waypoint_by_id("S").get_angle_to_waypoint("G").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
+        assert graph._get_waypoint_by_id("G").get_angle_to_waypoint("S").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
+        assert graph._get_waypoint_by_id("G").get_angle_to_waypoint("H").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
+        assert graph._get_waypoint_by_id("H").get_angle_to_waypoint("G").get_edge().get_status() == EdgeStatus.POTENTIALLY_OBSTRUCTED
 
     def test_start_up_process_detect_lines(self):
         camera = CameraStub(IMAGES_PATH / "11.JPG")
         graph = Graph()
         yolo_detector = YOLODetector(camera, graph)
         graph = yolo_detector.start_up_process_detect()
-        assert graph._get_waypoint_by_id("S")._get_angle_to_waypoint("F").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        assert graph._get_waypoint_by_id("F")._get_angle_to_waypoint("S").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        assert graph._get_waypoint_by_id("G")._get_angle_to_waypoint("F").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        assert graph._get_waypoint_by_id("F")._get_angle_to_waypoint("G").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        assert graph._get_waypoint_by_id("H")._get_angle_to_waypoint("A").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        assert graph._get_waypoint_by_id("A")._get_angle_to_waypoint("H").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        assert graph._get_waypoint_by_id("I")._get_angle_to_waypoint("A").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        assert graph._get_waypoint_by_id("A")._get_angle_to_waypoint("I").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        assert graph._get_waypoint_by_id("B")._get_angle_to_waypoint("A").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        assert graph._get_waypoint_by_id("A")._get_angle_to_waypoint("B").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        assert graph._get_waypoint_by_id("B")._get_angle_to_waypoint("C").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        assert graph._get_waypoint_by_id("C")._get_angle_to_waypoint("B").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("S").get_angle_to_waypoint("F").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("F").get_angle_to_waypoint("S").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("G").get_angle_to_waypoint("F").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("F").get_angle_to_waypoint("G").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("H").get_angle_to_waypoint("A").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("A").get_angle_to_waypoint("H").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("I").get_angle_to_waypoint("A").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("A").get_angle_to_waypoint("I").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("B").get_angle_to_waypoint("A").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("A").get_angle_to_waypoint("B").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("B").get_angle_to_waypoint("C").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        assert graph._get_waypoint_by_id("C").get_angle_to_waypoint("B").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
         # the following to tests fail because the model recognizes the line falsely
-        #assert graph._get_waypoint_by_id("C")._get_angle_to_waypoint("F").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
-        #assert graph._get_waypoint_by_id("F")._get_angle_to_waypoint("C").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        #assert graph._get_waypoint_by_id("C").get_angle_to_waypoint("F").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
+        #assert graph._get_waypoint_by_id("F").get_angle_to_waypoint("C").get_edge().get_status() == EdgeStatus.POTENTIALLY_FREE
         # check missing edges
-        assert graph._get_waypoint_by_id("I")._get_angle_to_waypoint("B").get_edge().get_status() == EdgeStatus.POTENTIALLY_MISSING
-        assert graph._get_waypoint_by_id("B")._get_angle_to_waypoint("I").get_edge().get_status() == EdgeStatus.POTENTIALLY_MISSING
-        assert graph._get_waypoint_by_id("C")._get_angle_to_waypoint("G").get_edge().get_status() == EdgeStatus.POTENTIALLY_MISSING
-        assert graph._get_waypoint_by_id("G")._get_angle_to_waypoint("C").get_edge().get_status() == EdgeStatus.POTENTIALLY_MISSING
+        assert graph._get_waypoint_by_id("I").get_angle_to_waypoint("B").get_edge().get_status() == EdgeStatus.POTENTIALLY_MISSING
+        assert graph._get_waypoint_by_id("B").get_angle_to_waypoint("I").get_edge().get_status() == EdgeStatus.POTENTIALLY_MISSING
+        assert graph._get_waypoint_by_id("C").get_angle_to_waypoint("G").get_edge().get_status() == EdgeStatus.POTENTIALLY_MISSING
+        assert graph._get_waypoint_by_id("G").get_angle_to_waypoint("C").get_edge().get_status() == EdgeStatus.POTENTIALLY_MISSING
 
         

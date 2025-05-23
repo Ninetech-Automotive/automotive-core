@@ -9,11 +9,18 @@ class TestWaypoint:
 
     @pytest.fixture
     def waypoint(self):
-        b = Waypoint("B")
-        edge = Edge()
-        angle = Angle(b, 60.0, edge)
         a = Waypoint("A")
-        a.set_angles([angle])
+        b = Waypoint("B")
+        c = Waypoint("C")
+        d = Waypoint("D")
+        edge_b = Edge()
+        edge_c = Edge()
+        edge_d = Edge()
+        angle_b = Angle(b, 60.0, edge_b)
+        angle_c = Angle(c, 180.0, edge_c)
+        angle_d = Angle(d, 300.0, edge_d)
+        a.set_angles([angle_b, angle_c, angle_d])
+        a.set_incoming_angle_by_id("C")
         return a
 
     def test_set_incoming_angle_by_id(self, waypoint):
@@ -47,3 +54,10 @@ class TestWaypoint:
 
         assert updated_angle.get_waypoint().get_status() == WaypointStatus.BLOCKED
         assert updated_angle.get_edge().get_status() == EdgeStatus.OBSTRUCTED
+
+    def test_get_value_from_angle_to_waypoint(self, waypoint):
+        assert waypoint.get_value_from_angle_to_waypoint("B") == 60.0
+
+    def test_get_value_from_angle_to_waypoint_with_diff_incoming(self, waypoint):
+        waypoint.set_incoming_angle_by_id("D")
+        assert waypoint.get_value_from_angle_to_waypoint("B") == 300.0

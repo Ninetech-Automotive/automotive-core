@@ -36,4 +36,4 @@ def test_get_tolerances():
     instance = Configurator()
     tolerances = instance.get_tolerances()
     assert tolerances is not None
-    assert tolerances["waypoint"] == 50
+    assert tolerances["waypoint"] == 200

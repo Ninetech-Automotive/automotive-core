@@ -101,7 +101,8 @@ class Waypoint:
 
     def __get_value_from_angle(self, angle):
         calculated_value = self.__calculate_value_from_angle(angle)
-        return min(self.angles, key=lambda a: self.__modulo_360_difference(a.get_value(),calculated_value))
+        angle = min(self.angles, key=lambda a: self.__modulo_360_difference(a.get_value(),calculated_value))
+        return angle.get_value()
     
     def __modulo_360_difference(self, a, b):
         diff = (a - b) % 360

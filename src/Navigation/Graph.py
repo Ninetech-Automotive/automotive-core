@@ -224,6 +224,9 @@ class Graph:
         )
         edge_to_previous.set_status(EdgeStatus.OBSTRUCTED)
 
+    def get_current_waypoint(self):
+        return self.current_waypoint
+
     def __str__(self):
         return f"""
         Graph[

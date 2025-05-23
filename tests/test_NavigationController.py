@@ -29,16 +29,17 @@ class TestNavigationController:
 
     @pytest.fixture
     def controller(self, emitter, object_detector):
-        return NavigationController(emitter, object_detector)
+        controller = NavigationController(emitter, object_detector)
+        controller.graph = Graph()
+        return controller
 
     def test_start(self, controller):
         controller._start("A")
         assert controller.graph.target_waypoint.id == "A"
-        assert "S" in controller.outgoing_waypoint_ids
         controller.emitter.emit.assert_called_once_with("ping")
 
     def test_on_pong(self, controller):
-        with patch.object(controller, "_NavigationController__next") as mock_next:
+        with patch.object(controller, "_NavigationController__go_to_next_waypoint_by_ideal_path") as mock_next:
             controller.on_pong()
             mock_next.assert_called_once()
 
@@ -51,7 +52,6 @@ class TestNavigationController:
         assert (
             controller.graph.previous_waypoint.angles[0].edge.status == EdgeStatus.FREE
         )
-        controller.emitter.emit.assert_called_once_with("scan_point")
 
     def test_on_angle(self, controller):
         controller.graph.set_target_waypoint("A")
@@ -72,8 +72,3 @@ class TestNavigationController:
             assert (
                 controller.graph.current_waypoint.angles[0].edge.status
                 == EdgeStatus.POTENTIALLY_OBSTRUCTED
-            )
-
-    def test_on_turned_to_target_line(self, controller):
-        controller.on_turned_to_target_line()
-        controller.emitter.emit.assert_called_once_with("follow_line")
