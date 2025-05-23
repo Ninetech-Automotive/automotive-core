@@ -60,16 +60,16 @@ class Waypoint:
     
     def set_angle_to_waypoint_as_missing(self, waypoint_id: str):
         Validator.validate_waypoint_id_format(waypoint_id)
-        angle = self._get_angle_to_waypoint(waypoint_id)
+        angle = self.get_angle_to_waypoint(waypoint_id)
         angle.get_edge().set_status(EdgeStatus.MISSING)
         
     
-    def _get_angle_to_waypoint(self, waypoint_id: str):
+    def get_angle_to_waypoint(self, waypoint_id: str):
         return [a for a in self.angles if a.get_waypoint().get_id() == waypoint_id][0]
     
     def get_edge_to_waypoint(self, waypoint_id: str):
         Validator.validate_waypoint_id_format(waypoint_id)
-        angle = self._get_angle_to_waypoint(waypoint_id)
+        angle = self.get_angle_to_waypoint(waypoint_id)
         return angle.get_edge()
     
     def update_angle(self, value: float, waypoint_status: WaypointStatus, edge_status: EdgeStatus):
@@ -94,6 +94,15 @@ class Waypoint:
         # returns the angle with the predefined value that is closest to the calculated angle
         return min(self.angles, key=lambda a: self.__modulo_360_difference(a.get_value(),calculated_angle))
     
+    def get_value_from_angle_to_waypoint(self, waypoint_id: str):
+        Validator.validate_waypoint_id_format(waypoint_id)
+        angle = self.get_angle_to_waypoint(waypoint_id)
+        return self.__get_value_from_angle(angle.get_value())
+
+    def __get_value_from_angle(self, angle):
+        calculated_value = self.__calculate_value_from_angle(angle)
+        return min(self.angles, key=lambda a: self.__modulo_360_difference(a.get_value(),calculated_value))
+    
     def __modulo_360_difference(self, a, b):
         diff = (a - b) % 360
         if diff > 180:
@@ -102,6 +111,9 @@ class Waypoint:
 
     def __calculate_angle_from_value(self, value: float):
         return (self.incoming_angle - 180.0 + value) % 360
+    
+    def __calculate_value_from_angle(self, angle: float):
+        return (angle - (self.incoming_angle + 180.0)) % 360
     
     def __str__(self):
         return f"Waypoint[Status:{self.status};ID:{self.id};Angles:{self.angles};Incoming_Angle:{self.incoming_angle};Weight_To_Target:{self.weight_to_target};Dijkstra_Visited:{self.dijkstra_visied};previous_node_to_this_waypoint:{self.previous_node_to_this_waypoint}]"

@@ -66,13 +66,13 @@ class Graph:
         self.target_waypoint = self._get_waypoint_by_id(target_waypoint_id)
 
     def go_to_next_best_waypoint(self):
-        next_best_waypoint = self.__get_next_best_waypoint()
+        next_best_waypoint = self.get_next_best_waypoint()
         next_best_waypoint.set_incoming_angle_by_id(self.current_waypoint.get_id())
         self.previous_waypoint = self.current_waypoint
         self.current_waypoint = next_best_waypoint
         return next_best_waypoint.get_id()
 
-    def __get_next_best_waypoint(self):
+    def get_next_best_waypoint(self):
         self.__calculate_shortest_path()
         self.__store_shortest_path()
         return self.shortest_path_to_target[0]
@@ -101,7 +101,7 @@ class Graph:
         )
         self.__reset_object_detection_data()
         self.is_object_detection_data_reset = True
-        self.__get_next_best_waypoint()
+        self.get_next_best_waypoint()
 
     def __reset_object_detection_data(self):
         for waypoint in self.waypoints:
