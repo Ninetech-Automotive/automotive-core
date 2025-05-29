@@ -3,6 +3,7 @@ from Communication.Emitter import Emitter
 from ObjectDetection.ObjectDetector import ObjectDetector
 from Navigation.WaypointStatus import WaypointStatus
 from Validation.Validator import Validator
+import sys
 
 class NavigationController():
     def __init__(self, emitter: Emitter, object_detector: ObjectDetector):
@@ -90,3 +91,6 @@ class NavigationController():
     def on_set_target(self, target_waypoint_id: str):
         Validator.validate_waypoint_id_format(target_waypoint_id)
         self._start(target_waypoint_id)
+
+    def on_stop(self):
+        sys.exit()
