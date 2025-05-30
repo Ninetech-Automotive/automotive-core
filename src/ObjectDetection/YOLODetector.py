@@ -12,8 +12,9 @@ from Configuration.Configurator import Configurator
 
 
 class YOLODetector(ObjectDetector):
-    def __init__(self, camera, center_stripe_percentage=0.5):
-        self.camera = camera
+    def __init__(self, top_camera, bottom_camera, center_stripe_percentage=0.5):
+        self.top_camera = top_camera
+        self.bottom_camera = bottom_camera
         path_to_object_model = Path(__file__).resolve().parent / "best.pt"
         path_to_line_model = Path(__file__).resolve().parent / "line_model.pt"
         self.object_model = YOLO(path_to_object_model)
@@ -22,14 +23,14 @@ class YOLODetector(ObjectDetector):
         self.center_stripe_percentage = center_stripe_percentage
 
     def detect(self):
-        frame = self.camera.get_image_array()
+        frame = self.bottom_camera.get_image_array()
         results = self.object_model.predict(frame, imgsz=640)
         objects = self.__parse_results(results)
         return self.__get_object_status(objects)
     
     def start_up_process_detect(self):
         graph = Graph()
-        frame = self.camera.get_image_array()
+        frame = self.top_camera.get_image_array()
         object_results = self.object_model.predict(frame, imgsz=640)
         line_results = self.line_model.predict(frame, imgsz=640)
         objects = self.__parse_results(object_results)
@@ -46,8 +47,8 @@ class YOLODetector(ObjectDetector):
         return waypoint_status, edge_status
 
     def __check_for_label_in_center_stripe(self, objects, label):
-        center_stripe_width = self.camera.get_width() * self.center_stripe_percentage
-        center = self.camera.get_width() / 2
+        center_stripe_width = self.bottom_camera.get_width() * self.center_stripe_percentage
+        center = self.bottom_camera.get_width() / 2
         center_stripe_left_bound = center - center_stripe_width / 2
         center_stripe_right_bound = center + center_stripe_width / 2
         for obj in objects:
