@@ -82,6 +82,7 @@ class NavigationController():
         self.emitter.emit("follow_line")
 
     def on_cone_detected(self):
+        self.is_on_ideal_path = False
         self.graph.cone_detected()
         self.graph.go_back_to_previous_waypoint()
 
