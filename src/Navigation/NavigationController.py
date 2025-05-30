@@ -42,10 +42,16 @@ class NavigationController():
             return angle_value - 360
         else:
             return angle_value
+        
+    def use_pointscanning(self):
+        self.is_on_ideal_path = False
 
     def on_pong(self):
         # continue with the next waypoint if communication test was successful
-        self.__go_to_next_waypoint_by_ideal_path()
+        if self.is_on_ideal_path:
+            self.__go_to_next_waypoint_by_ideal_path()
+        else:
+            self.__go_to_next_waypoint_after_portscanning()
     
     def on_waypoint(self):
         self.graph.update_waypoint_status(WaypointStatus.FREE)

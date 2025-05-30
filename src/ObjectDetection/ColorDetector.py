@@ -1,6 +1,7 @@
 from Navigation.WaypointStatus import WaypointStatus
 from Navigation.EdgeStatus import EdgeStatus
 from ObjectDetection.ObjectDetector import ObjectDetector
+from Navigation.Graph import Graph
 
 class ColorDetector(ObjectDetector):
 
@@ -64,5 +65,5 @@ class ColorDetector(ObjectDetector):
         return waypoint_status, edge_status
     
 
-    def start_up_process_detect():
-        pass
+    def start_up_process_detect(self):
+        return Graph()
