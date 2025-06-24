@@ -9,8 +9,6 @@ class NavigationController():
     def __init__(self, emitter: Emitter, object_detector: ObjectDetector):
         self.emitter = emitter
         self.object_detector = object_detector
-        # startup procedure
-        self.graph = self.object_detector.start_up_process_detect()
         # keeps track of the outgoing waypoints and their indexes for the current waypoint
         self.outgoing_waypoint_ids = []
         self.is_on_ideal_path = True
@@ -47,6 +45,8 @@ class NavigationController():
         self.is_on_ideal_path = False
 
     def on_pong(self):
+        # startup procedure
+        self.graph = self.object_detector.start_up_process_detect()
         # continue with the next waypoint if communication test was successful
         if self.is_on_ideal_path:
             self.__go_to_next_waypoint_by_ideal_path()
