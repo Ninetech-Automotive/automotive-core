@@ -82,7 +82,7 @@ class YOLODetector(ObjectDetector):
             waypoint = graph._get_waypoint_by_id(waypoint_name)
             for obj in objects:
                 if obj["label"] == label:
-                    if (x - tolerance) <= obj["bounding_box"]["x_min"] <= (x + tolerance) and \
+                    if (x - tolerance) <= obj["bounding_box"]["x_min"] + (obj["bounding_box"]["width"] / 2) <= (x + tolerance) and \
                        (y - tolerance) <= obj["bounding_box"]["y_max"] <= (y + tolerance):
                         #Set status to POTENTIALLY_BLOCKED if cone is detected
                         waypoint.set_status(WaypointStatus.POTENTIALLY_BLOCKED)
@@ -243,6 +243,12 @@ class YOLODetector(ObjectDetector):
                 obstacle_x = outgoint_waypoint_data["obstacle_coords"]["x"]
                 obstacle_y = outgoint_waypoint_data["obstacle_coords"]["y"]
                 self.__write_text(annotated_frame, f"{waypoint_id}-{outgoint_waypoint_id}", obstacle_x, obstacle_y)
+
+        # Draw a 100px ruler at the top-left corner
+        start_point = (10, 30)
+        end_point = (110, 30)
+        cv2.line(annotated_frame, start_point, end_point, (255, 0, 0), 4)
+        cv2.putText(annotated_frame, "100px", (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 0, 0), 2)
 
         cv2.imwrite(save_path, annotated_frame)
 
