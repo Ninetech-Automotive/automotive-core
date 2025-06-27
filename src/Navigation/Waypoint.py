@@ -10,7 +10,8 @@ class Waypoint:
         self.status = WaypointStatus.UNKNOWN
         self.id = id
         self.angles: List[Angle] = []
-        self.incoming_angle: float = 0.0
+        # default to 180 for first waypoint
+        self.incoming_angle: float = 180.0
         self.weight_to_target: int = sys.maxsize
         self.dijkstra_visied = False
         # The previous node to this waypoint in the shortest path from the current waypoint to the target waypoint.
@@ -97,12 +98,7 @@ class Waypoint:
     def get_value_from_angle_to_waypoint(self, waypoint_id: str):
         Validator.validate_waypoint_id_format(waypoint_id)
         angle = self.get_angle_to_waypoint(waypoint_id)
-        return self.__get_value_from_angle(angle.get_value())
-
-    def __get_value_from_angle(self, angle):
-        calculated_value = self.__calculate_value_from_angle(angle)
-        angle = min(self.angles, key=lambda a: self.__modulo_360_difference(a.get_value(),calculated_value))
-        return angle.get_value()
+        return self.__calculate_value_from_angle(angle.get_value())
     
     def __modulo_360_difference(self, a, b):
         diff = (a - b) % 360

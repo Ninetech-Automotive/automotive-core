@@ -45,8 +45,6 @@ class NavigationController():
         self.is_on_ideal_path = False
 
     def on_pong(self):
-        # startup procedure
-        self.graph = self.object_detector.start_up_process_detect()
         # continue with the next waypoint if communication test was successful
         if self.is_on_ideal_path:
             self.__go_to_next_waypoint_by_ideal_path()
@@ -97,6 +95,8 @@ class NavigationController():
 
     def on_set_target(self, target_waypoint_id: str):
         Validator.validate_waypoint_id_format(target_waypoint_id)
+        # startup procedure
+        self.graph = self.object_detector.start_up_process_detect()
         self._start(target_waypoint_id)
 
     def on_stop(self):
