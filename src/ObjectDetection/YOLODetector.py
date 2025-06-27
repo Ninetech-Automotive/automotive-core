@@ -1,5 +1,7 @@
+from datetime import datetime
 import cv2
 import json
+import os
 from pathlib import Path
 from ultralytics import YOLO
 from Navigation.WaypointStatus import WaypointStatus
@@ -36,7 +38,18 @@ class YOLODetector(ObjectDetector):
         objects = self.__parse_results(object_results)
         # self.__print_object_coordinates(objects)
         # self.__visualize_results(line_results)
+
+        # save results to files
+        output_dir = "test_images"
+        if not os.path.exists(output_dir):
+            os.makedirs(output_dir)
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        object_detection_file_path = os.path.join(output_dir, f"{timestamp}_objects.jpg")
+        line_detection_file_path = os.path.join(output_dir, f"{timestamp}_lines.jpg")
+        self.__save_results_to_file(object_results, object_detection_file_path)
+        self.__save_results_to_file(line_results, line_detection_file_path)
         line_objects = self.__parse_results(line_results, line_model=True)
+
         self.__update_waypoints(graph, objects, "cone")
         self.__update_edges(graph, objects, line_objects, ["obstacle", "edge"])
         return graph
@@ -79,6 +92,7 @@ class YOLODetector(ObjectDetector):
             if waypoint.get_status() != WaypointStatus.POTENTIALLY_BLOCKED:
                 waypoint.set_status(WaypointStatus.POTENTIALLY_FREE)
             waypoint_statuses[waypoint_name] = waypoint.get_status()
+            print(waypoint_statuses)
         return waypoint_statuses
     
     def __update_edges(self, graph, objects, line_objects, labels):
@@ -143,10 +157,6 @@ class YOLODetector(ObjectDetector):
                                 edge.set_status(EdgeStatus.POTENTIALLY_FREE)
                                 break  # check next edge    
                 edge_statuses[f"{waypoint_id}_to_{outgoing_waypoint_id}"] = edge.get_status()
-
-                # If no line object was found, set edge status to POTENTIALLY_MISSING
-                if edge.get_status() == EdgeStatus.UNKNOWN:
-                    edge.set_status(EdgeStatus.POTENTIALLY_MISSING)
 
                 edge_statuses[f"{waypoint_id}_to_{outgoing_waypoint_id}"] = edge.get_status()
 
@@ -214,10 +224,32 @@ class YOLODetector(ObjectDetector):
         cv2.waitKey(0)
         cv2.destroyAllWindows()
 
+    def __save_results_to_file(self, results, save_path):
+        annotated_frame = results[0].orig_img.copy()
+        for result in results[0].boxes:
+            x_min, y_min, x_max, y_max = map(int, result.xyxy[0])
+            confidence = result.conf[0].item()
+            # Draw thicker bounding boxes
+            cv2.rectangle(annotated_frame, (x_min, y_min), (x_max, y_max), (0, 255, 0), 3)
+            text = f"({confidence:.2f})"
+            cv2.putText(annotated_frame, text, (x_min, y_min - 10), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 255, 0), 3)
+
+        waypoints = Configurator().get_waypoints()
+        for waypoint_id, waypoint_data in waypoints.items():
+            x = waypoint_data["x"]
+            y = waypoint_data["y"]
+            self.__write_text(annotated_frame, waypoint_id, x, y)
+            for outgoint_waypoint_id, outgoint_waypoint_data in waypoint_data["edges"].items():
+                obstacle_x = outgoint_waypoint_data["obstacle_coords"]["x"]
+                obstacle_y = outgoint_waypoint_data["obstacle_coords"]["y"]
+                self.__write_text(annotated_frame, f"{waypoint_id}-{outgoint_waypoint_id}", obstacle_x, obstacle_y)
+
+        cv2.imwrite(save_path, annotated_frame)
+
     def __write_text(self, annotated_frame, text, x, y):
         font = cv2.FONT_HERSHEY_SIMPLEX
-        font_scale = 0.5  # Reduced font scale for smaller text
-        thickness = 1  # Reduced thickness for smaller text
+        font_scale = 2  # Reduced font scale for smaller text
+        thickness = 3  # Reduced thickness for smaller text
         text_size = cv2.getTextSize(text, font, font_scale, thickness)[0]
         background_top_left = (x - 5, y - text_size[1] - 5)
         background_bottom_right = (x + text_size[0] + 5, y + 5)

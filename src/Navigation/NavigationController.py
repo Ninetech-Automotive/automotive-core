@@ -2,6 +2,7 @@ from Navigation.Graph import Graph
 from Communication.Emitter import Emitter
 from ObjectDetection.ObjectDetector import ObjectDetector
 from Navigation.WaypointStatus import WaypointStatus
+from Navigation.EdgeStatus import EdgeStatus
 from Validation.Validator import Validator
 import sys
 
@@ -31,8 +32,9 @@ class NavigationController():
         current_waypoint = self.graph.get_current_waypoint()
         next_best_waypoint = self.graph.get_next_best_waypoint()
         angle_value = current_waypoint.get_value_from_angle_to_waypoint(next_best_waypoint.get_id())
-        self.currently_turned_angle = angle_value
+        angle_value = angle_value + self.currently_turned_angle
         angle_value = self.__optimize_angle_direction(angle_value)
+        self.currently_turned_angle = angle_value
         self.emitter.emit(f"target_line_angle:{angle_value}")
 
     def __optimize_angle_direction(self, angle_value: float):
@@ -53,7 +55,7 @@ class NavigationController():
     
     def on_waypoint(self):
         self.graph.update_waypoint_status(WaypointStatus.FREE)
-        self.graph.update_previous_edge_status()
+        self.graph.update_previous_edge_status(EdgeStatus.FREE)
         if self.graph.has_reached_target_waypoint():
             print('[pi    ] target reached')
             self.emitter.emit("target_reached")
@@ -77,8 +79,11 @@ class NavigationController():
         self.__go_to_next_waypoint_after_portscanning()
 
     def on_line_missing(self):
-        self.is_on_ideal_path = False
-        self.emitter.emit("scan_point")
+        # self.is_on_ideal_path = False
+        # self.emitter.emit("scan_point")
+        intended_waypoint = self.graph.get_shortest_path_to_target()[0]
+        self.graph.update_missing_line(intended_waypoint.get_id())
+        self.__go_to_next_waypoint_by_ideal_path()
 
     def on_turned_to_target_line(self):
         self.graph.go_to_next_best_waypoint()

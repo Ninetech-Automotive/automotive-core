@@ -84,11 +84,11 @@ class Waypoint:
             angle.get_edge().set_status(edge_status)
         return angle
     
-    def update_edge_to_waypoint(self, waypoint_id: str):
+    def update_edge_to_waypoint(self, waypoint_id: str, status: EdgeStatus):
         Validator.validate_waypoint_id_format(waypoint_id)
         edge = self.get_edge_to_waypoint(waypoint_id)
         if edge.get_status() is not EdgeStatus.OBSTRUCTED:
-            edge.set_status(EdgeStatus.FREE)
+            edge.set_status(status)
 
     def __get_angle_from_value(self, value):
         calculated_angle = self.__calculate_angle_from_value(value)

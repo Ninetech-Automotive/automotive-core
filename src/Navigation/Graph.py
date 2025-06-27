@@ -92,6 +92,9 @@ class Graph:
             # if the target waypoint is not reachable, the previous node is None and leads to an AttributeError
             self.__handle_no_path_left()
 
+    def get_shortest_path_to_target(self):
+        return self.shortest_path_to_target
+
     def __handle_no_path_left(self):
         # prevents infinite loops
         if self.is_object_detection_data_reset:
@@ -131,9 +134,9 @@ class Graph:
         Validator.validate_waypoint_status(waypoint_status)
         self.current_waypoint.set_status(waypoint_status)
 
-    def update_previous_edge_status(self):
-        self.current_waypoint.update_edge_to_waypoint(self.previous_waypoint.get_id())
-        self.previous_waypoint.update_edge_to_waypoint(self.current_waypoint.get_id())
+    def update_previous_edge_status(self, edge_status: EdgeStatus):
+        self.current_waypoint.update_edge_to_waypoint(self.previous_waypoint.get_id(), edge_status)
+        self.previous_waypoint.update_edge_to_waypoint(self.current_waypoint.get_id(), edge_status)
 
     def update_waypoint_from_angle(
         self,
@@ -160,6 +163,12 @@ class Graph:
                 self.current_waypoint.set_angle_to_waypoint_as_missing(
                     angle.get_waypoint().get_id()
                 )
+
+    def update_missing_line(self, target_waypoint_id: str):
+        outgoing_edge = self.current_waypoint.get_edge_to_waypoint(target_waypoint_id)
+        incoming_edge = self.target_waypoint.get_edge_to_waypoint(self.current_waypoint.get_id())
+        outgoing_edge.set_status(EdgeStatus.MISSING)
+        incoming_edge.set_status(EdgeStatus.MISSING)
 
     def __calculate_shortest_path(self):
         # dijkstra
