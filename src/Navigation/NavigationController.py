@@ -5,22 +5,30 @@ from Navigation.WaypointStatus import WaypointStatus
 from Navigation.EdgeStatus import EdgeStatus
 from Validation.Validator import Validator
 import sys
+import time
 
 class NavigationController():
     def __init__(self, emitter: Emitter, object_detector: ObjectDetector):
         self.emitter = emitter
         self.object_detector = object_detector
+        self.communication_available = False
         # keeps track of the outgoing waypoints and their indexes for the current waypoint
         self.outgoing_waypoint_ids = []
         self.is_on_ideal_path = True
         self.currently_turned_angle = 0.0
 
-    def _start(self, target_waypoint_id: str):
-        self.graph.set_target_waypoint(target_waypoint_id)
-        self.outgoing_waypoint_ids.append("S")
-        print("[pi    ] target set to ", target_waypoint_id)
+    def start(self):
+        self.check_communication()
+
+    def check_communication(self):
+        if not self.communication_available:
+            self.__test_communication()
+        else:
+            pass
+
+    def __test_communication(self):
         self.emitter.emit("ping")
-        # controller should now receive a 'pong' message and continue with the on_pong method
+        time.sleep(5)
 
     def __go_to_next_waypoint_after_portscanning(self):
         next_best_waypoint = self.graph.get_next_best_waypoint()
@@ -47,11 +55,7 @@ class NavigationController():
         self.is_on_ideal_path = False
 
     def on_pong(self):
-        # continue with the next waypoint if communication test was successful
-        if self.is_on_ideal_path:
-            self.__go_to_next_waypoint_by_ideal_path()
-        else:
-            self.__go_to_next_waypoint_after_portscanning()
+        self.communication_available = True
     
     def on_waypoint(self):
         self.graph.update_waypoint_status(WaypointStatus.FREE)
@@ -102,7 +106,15 @@ class NavigationController():
         Validator.validate_waypoint_id_format(target_waypoint_id)
         # startup procedure
         self.graph = self.object_detector.start_up_process_detect()
-        self._start(target_waypoint_id)
+        # setup graph
+        self.graph.set_target_waypoint(target_waypoint_id)
+        self.outgoing_waypoint_ids.append("S")
+        print("[pi    ] target set to ", target_waypoint_id)
+        # start navigation
+        if self.is_on_ideal_path:
+            self.__go_to_next_waypoint_by_ideal_path()
+        else:
+            self.__go_to_next_waypoint_after_portscanning()
 
     def on_stop(self):
         sys.exit()
