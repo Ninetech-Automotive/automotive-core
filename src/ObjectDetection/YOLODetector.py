@@ -17,8 +17,8 @@ class YOLODetector(ObjectDetector):
     def __init__(self, top_camera, bottom_camera, center_stripe_percentage=0.5):
         self.top_camera = top_camera
         self.bottom_camera = bottom_camera
-        path_to_object_model = Path(__file__).resolve().parent / "best.pt"
-        path_to_line_model = Path(__file__).resolve().parent / "line_model.pt"
+        path_to_object_model = Path(__file__).resolve().parent / "small_object_model.pt"
+        path_to_line_model = Path(__file__).resolve().parent / "small_line_model.pt"
         self.object_model = YOLO(path_to_object_model)
         self.line_model = YOLO(path_to_line_model)
         # percentage of the image width that is considered the center stripe and is checked for obstacles
